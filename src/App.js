@@ -6,7 +6,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>NBA Team Builder</h1>
+        <h1>BALLIN' ON A BUDGET | BUDGET GM</h1>
       </header>
       <main>
         <TeamBuilder />
