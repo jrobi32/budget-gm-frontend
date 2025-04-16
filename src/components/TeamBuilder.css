@@ -73,8 +73,10 @@
 
 .player-options {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 15px;
+    overflow-x: auto;
+    padding-bottom: 10px;
 }
 
 .player-option {
@@ -82,7 +84,8 @@
     border-radius: 8px;
     padding: 15px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    width: 200px;
+    min-width: 200px;
+    flex: 0 0 auto;
     text-align: center;
 }
 

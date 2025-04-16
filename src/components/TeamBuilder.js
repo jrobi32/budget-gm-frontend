@@ -297,7 +297,7 @@ const TeamBuilder = () => {
                             type="text"
                             value={playerName}
                             onChange={(e) => setPlayerName(e.target.value)}
-                            placeholder="Enter your name"
+                            placeholder="Don't forget to enter a nickname!"
                             className="player-name-input"
                         />
                         <button 
