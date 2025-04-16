@@ -33,29 +33,33 @@ const TeamBuilder = () => {
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     const updatePlayerOptions = (pool) => {
-        console.log('Updating player options with pool:', pool);
-        console.log('Selected players:', selectedPlayers);
+        // Create a list of all selected player names for quick lookup
+        const selectedPlayerNames = selectedPlayers.map(p => p.name);
+        console.log('Selected player names:', selectedPlayerNames);
         
         const options = [];
+        
+        // Process each cost category
         ['$3', '$2', '$1', '$0'].forEach(category => {
             if (pool[category]) {
                 // Filter out players that are already selected
-                const filteredPlayers = pool[category].filter(player => {
-                    const isSelected = selectedPlayers.some(p => p.name === player.name);
-                    console.log(`Player ${player.name} is ${isSelected ? 'selected' : 'not selected'}`);
-                    return !isSelected;
-                });
+                const availablePlayers = pool[category].filter(player => 
+                    !selectedPlayerNames.includes(player.name)
+                );
                 
-                if (filteredPlayers.length > 0) {
-                    options.push(...filteredPlayers.map(player => ({
+                console.log(`Category ${category}: ${availablePlayers.length} available players`);
+                
+                // Add available players to options with their cost
+                availablePlayers.forEach(player => {
+                    options.push({
                         ...player,
                         cost: parseInt(category.replace('$', ''))
-                    })));
-                }
+                    });
+                });
             }
         });
         
-        console.log('Updated player options:', options);
+        console.log('Final player options:', options);
         setPlayerOptions(options);
     };
 
@@ -75,11 +79,14 @@ const TeamBuilder = () => {
             return;
         }
 
+        // Add player to selected players
         const newSelectedPlayers = [...selectedPlayers, player];
         setSelectedPlayers(newSelectedPlayers);
+        
+        // Update budget
         setBudget(budget - player.cost);
         
-        // Update player options with the new selected players
+        // Update player options to remove the selected player
         updatePlayerOptions(playerPool);
         
         setError('');
@@ -88,8 +95,14 @@ const TeamBuilder = () => {
     const removePlayer = (playerName) => {
         const player = selectedPlayers.find(p => p.name === playerName);
         if (player) {
-            setSelectedPlayers(selectedPlayers.filter(p => p.name !== playerName));
+            // Remove player from selected players
+            const newSelectedPlayers = selectedPlayers.filter(p => p.name !== playerName);
+            setSelectedPlayers(newSelectedPlayers);
+            
+            // Update budget
             setBudget(budget + player.cost);
+            
+            // Update player options to add the removed player back
             updatePlayerOptions(playerPool);
         }
     };
