@@ -14,10 +14,6 @@ const TeamBuilder = () => {
     const [playerName, setPlayerName] = useState('');
     const [error, setError] = useState('');
 
-    useEffect(() => {
-        loadPlayerPool();
-    }, []);
-
     const loadPlayerPool = async () => {
         try {
             const response = await axios.get(`${API_URL}/api/player-pool`);
@@ -27,6 +23,10 @@ const TeamBuilder = () => {
             setError('Error loading player pool');
         }
     };
+
+    useEffect(() => {
+        loadPlayerPool();
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     const updatePlayerOptions = (pool) => {
         const options = [];
