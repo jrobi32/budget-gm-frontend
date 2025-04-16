@@ -8,39 +8,20 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 // Function to get player image URL
 const getPlayerImageUrl = (playerName) => {
-    // For NBA players, try multiple image sources
-    if (playerIds[playerName]) {
-        const playerId = playerIds[playerName];
-        // Try different image sources in order
-        const imageUrls = [
-            // NBA.com formats
-            `https://cdn.nba.com/headshots/nba/latest/1040x760/${playerId}.png`,
-            `https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/1040x760/${playerId}.png`,
-            // ESPN format
-            `https://a.espncdn.com/combiner/i?img=/i/headshots/nba/players/full/${playerId}.png`,
-            // Basketball Reference format
-            `https://www.basketball-reference.com/req/202106291/images/players/${playerId}.jpg`,
-            // NBA Stats format
-            `https://stats.nba.com/media/players/230x185/${playerId}.png`
-        ];
-        return imageUrls[0]; // Start with the first URL format
+    // Check if it's a fictional player
+    if (playerName === 'Joe Rogan' || playerName === 'Elon Musk' || playerName === 'Mark Zuckerberg') {
+        // Use a more appropriate placeholder for fictional players
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(playerName)}&background=random&color=fff&size=200&bold=true&format=svg`;
     }
     
-    // For fictional players, use specific images
-    const fictionalImages = {
-        'Joe Rogan': 'https://i.imgur.com/JoeRogan.jpg',
-        'Logan Paul': 'https://i.imgur.com/LoganPaul.jpg',
-        'Super Mario': 'https://i.imgur.com/SuperMario.jpg',
-        'Dwayne "The Rock" Johnson': 'https://i.imgur.com/TheRock.jpg',
-        'Air Bud': 'https://i.imgur.com/AirBud.jpg'
-    };
-    
-    if (fictionalImages[playerName]) {
-        return fictionalImages[playerName];
+    // For NBA players, use their official NBA.com image
+    const playerId = playerIds[playerName];
+    if (playerId) {
+        return `https://cdn.nba.com/headshots/nba/latest/1040x760/${playerId}.png`;
     }
     
-    // Default image if no match
-    return `https://ui-avatars.com/api/?name=${encodeURIComponent(playerName)}&size=200&background=random`;
+    // Fallback for any other players
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(playerName)}&background=random&color=fff&size=200&bold=true&format=svg`;
 };
 
 const TeamBuilder = () => {
