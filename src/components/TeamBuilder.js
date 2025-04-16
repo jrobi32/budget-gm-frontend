@@ -99,7 +99,7 @@ const getPlayerImageUrl = (playerName) => {
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(playerName)}&background=1E88E5&color=fff&size=200&bold=true&format=svg`;
 };
 
-const TeamBuilder = () => {
+const TeamBuilder = ({ onError, nickname }) => {
     const [playerPool, setPlayerPool] = useState({});
     const [selectedPlayers, setSelectedPlayers] = useState([]);
     const [playerOptions, setPlayerOptions] = useState({});
@@ -206,7 +206,7 @@ const TeamBuilder = () => {
             return;
         }
 
-        if (!props.nickname || props.nickname.trim() === '') {
+        if (!nickname || nickname.trim() === '') {
             setError('Please enter your nickname before simulating');
             return;
         }
@@ -215,7 +215,7 @@ const TeamBuilder = () => {
             console.log('Simulating team with players:', selectedPlayers.map(p => p.name));
             const response = await axios.post(`${API_URL}/api/simulate`, {
                 players: selectedPlayers.map(p => p.name),
-                player_name: props.nickname
+                player_name: nickname
             });
             
             console.log('Simulation response:', response.data);
