@@ -33,20 +33,29 @@ const TeamBuilder = () => {
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     const updatePlayerOptions = (pool) => {
+        console.log('Updating player options with pool:', pool);
+        console.log('Selected players:', selectedPlayers);
+        
         const options = [];
         ['$3', '$2', '$1', '$0'].forEach(category => {
             if (pool[category]) {
-                const players = pool[category].filter(player => 
-                    !selectedPlayers.some(p => p.name === player.name)
-                );
-                if (players.length > 0) {
-                    options.push(...players.map(player => ({
+                // Filter out players that are already selected
+                const filteredPlayers = pool[category].filter(player => {
+                    const isSelected = selectedPlayers.some(p => p.name === player.name);
+                    console.log(`Player ${player.name} is ${isSelected ? 'selected' : 'not selected'}`);
+                    return !isSelected;
+                });
+                
+                if (filteredPlayers.length > 0) {
+                    options.push(...filteredPlayers.map(player => ({
                         ...player,
                         cost: parseInt(category.replace('$', ''))
                     })));
                 }
             }
         });
+        
+        console.log('Updated player options:', options);
         setPlayerOptions(options);
     };
 
@@ -69,7 +78,10 @@ const TeamBuilder = () => {
         const newSelectedPlayers = [...selectedPlayers, player];
         setSelectedPlayers(newSelectedPlayers);
         setBudget(budget - player.cost);
+        
+        // Update player options with the new selected players
         updatePlayerOptions(playerPool);
+        
         setError('');
     };
 
