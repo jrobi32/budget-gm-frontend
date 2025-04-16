@@ -21,5 +21,7 @@ export const playerIds = {
     'Royce O\'Neale': '1626220',
     'De\'Aaron Fox': '1628368',
     'Bennedict Mathurin': '1631097',
-    'Kyle Filipowski': '1641712'
+    'Kyle Filipowski': '1641712',
+    'Stephon Castle': '1641715',
+    'Dalton Knecht': '1641716'
 }; 

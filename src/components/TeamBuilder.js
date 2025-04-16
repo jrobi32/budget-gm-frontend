@@ -8,9 +8,22 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 // Function to get player image URL
 const getPlayerImageUrl = (playerName) => {
-    // For NBA players, use their NBA.com ID
+    // For NBA players, try multiple image sources
     if (playerIds[playerName]) {
-        return `https://cdn.nba.com/headshots/nba/latest/1040x760/${playerIds[playerName]}.png`;
+        const playerId = playerIds[playerName];
+        // Try different image sources in order
+        const imageUrls = [
+            // NBA.com formats
+            `https://cdn.nba.com/headshots/nba/latest/1040x760/${playerId}.png`,
+            `https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/1040x760/${playerId}.png`,
+            // ESPN format
+            `https://a.espncdn.com/combiner/i?img=/i/headshots/nba/players/full/${playerId}.png`,
+            // Basketball Reference format
+            `https://www.basketball-reference.com/req/202106291/images/players/${playerId}.jpg`,
+            // NBA Stats format
+            `https://stats.nba.com/media/players/230x185/${playerId}.png`
+        ];
+        return imageUrls[0]; // Start with the first URL format
     }
     
     // For fictional players, use specific images
