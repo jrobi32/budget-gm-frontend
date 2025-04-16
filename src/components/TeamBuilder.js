@@ -13,6 +13,7 @@ const TeamBuilder = () => {
     const [record, setRecord] = useState(null);
     const [playerName, setPlayerName] = useState('');
     const [error, setError] = useState('');
+    const [isSimulated, setIsSimulated] = useState(false);
 
     const loadPlayerPool = async () => {
         try {
@@ -50,6 +51,12 @@ const TeamBuilder = () => {
     };
 
     const selectPlayer = (player) => {
+        // Check if player is already selected
+        if (selectedPlayers.some(p => p.name === player.name)) {
+            setError('Player already selected');
+            return;
+        }
+        
         if (selectedPlayers.length >= 5) {
             setError('Team is already full');
             return;
@@ -129,6 +136,7 @@ const TeamBuilder = () => {
             };
             
             setRecord(recordWithStats);
+            setIsSimulated(true);
             setError('');
         } catch (error) {
             console.error('Error simulating team:', error);
@@ -148,7 +156,9 @@ const TeamBuilder = () => {
                         <div key={player.name} className="player-card">
                             <h3>{player.name}</h3>
                             <p>Cost: ${player.cost}</p>
-                            <button onClick={() => removePlayer(player.name)}>Remove</button>
+                            {!isSimulated && (
+                                <button onClick={() => removePlayer(player.name)}>Remove</button>
+                            )}
                         </div>
                     ))}
                 </div>
@@ -171,42 +181,46 @@ const TeamBuilder = () => {
                 )}
             </div>
 
-            <div className="player-section">
-                <h2>Available Players</h2>
-                <div className="player-options">
-                    {playerOptions.map(player => (
-                        <div key={player.name} className="player-card">
-                            <h3>{player.name}</h3>
-                            <p>Cost: ${player.cost}</p>
-                            <button 
-                                onClick={() => selectPlayer(player)}
-                                disabled={budget < player.cost || selectedPlayers.length >= 5}
-                            >
-                                Select
-                            </button>
+            {!isSimulated && (
+                <>
+                    <div className="player-section">
+                        <h2>Available Players</h2>
+                        <div className="player-options">
+                            {playerOptions.map(player => (
+                                <div key={player.name} className="player-card">
+                                    <h3>{player.name}</h3>
+                                    <p>Cost: ${player.cost}</p>
+                                    <button 
+                                        onClick={() => selectPlayer(player)}
+                                        disabled={budget < player.cost || selectedPlayers.length >= 5}
+                                    >
+                                        Select
+                                    </button>
+                                </div>
+                            ))}
                         </div>
-                    ))}
-                </div>
-            </div>
+                    </div>
 
-            {error && <div className="error-message">{error}</div>}
+                    {error && <div className="error-message">{error}</div>}
 
-            <div className="simulation-section">
-                <input
-                    type="text"
-                    value={playerName}
-                    onChange={(e) => setPlayerName(e.target.value)}
-                    placeholder="Enter your name"
-                    className="player-name-input"
-                />
-                <button 
-                    onClick={simulateTeam}
-                    disabled={selectedPlayers.length !== 5 || !playerName}
-                    className="simulate-button"
-                >
-                    Simulate Team
-                </button>
-            </div>
+                    <div className="simulation-section">
+                        <input
+                            type="text"
+                            value={playerName}
+                            onChange={(e) => setPlayerName(e.target.value)}
+                            placeholder="Enter your name"
+                            className="player-name-input"
+                        />
+                        <button 
+                            onClick={simulateTeam}
+                            disabled={selectedPlayers.length !== 5 || !playerName}
+                            className="simulate-button"
+                        >
+                            Simulate Team
+                        </button>
+                    </div>
+                </>
+            )}
         </div>
     );
 };
