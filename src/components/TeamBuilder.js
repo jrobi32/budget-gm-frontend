@@ -1,49 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './TeamBuilder.css';
+import { playerIds } from '../playerIds';
 
 // Get API URL from environment variable or use default
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 // Function to get player image URL
 const getPlayerImageUrl = (playerName) => {
-    // For NBA players, use their name to construct a URL
-    // For fictional players, use a default image
-    const nbaPlayers = [
-        'Kevin Durant', 'LeBron James', 'Stephen Curry', 'Giannis Antetokounmpo', 
-        'Luka Doncic', 'Joel Embiid', 'Jayson Tatum', 'Devin Booker', 
-        'Anthony Edwards', 'Karl-Anthony Towns', 'Cade Cunningham', 'Naz Reid',
-        'Josh Giddey', 'Scottie Barnes', 'Stephon Castle', 'Jaren Jackson Jr.',
-        'Donte DiVincenzo', 'Andrew Nembhard', 'Duncan Robinson', 'Royce O\'Neale',
-        'Dalton Knecht', 'De\'Aaron Fox', 'Bennedict Mathurin', 'Kyle Filipowski'
-    ];
+    // For NBA players, use their NBA.com ID
+    if (playerIds[playerName]) {
+        return `https://cdn.nba.com/headshots/nba/latest/1040x760/${playerIds[playerName]}.png`;
+    }
     
-    const fictionalPlayers = [
-        'Joe Rogan', 'Logan Paul', 'Super Mario', 'Dwayne "The Rock" Johnson',
-        'Air Bud'
-    ];
+    // For fictional players, use specific images
+    const fictionalImages = {
+        'Joe Rogan': 'https://i.imgur.com/JoeRogan.jpg',
+        'Logan Paul': 'https://i.imgur.com/LoganPaul.jpg',
+        'Super Mario': 'https://i.imgur.com/SuperMario.jpg',
+        'Dwayne "The Rock" Johnson': 'https://i.imgur.com/TheRock.jpg',
+        'Air Bud': 'https://i.imgur.com/AirBud.jpg'
+    };
     
-    // Use direct image URLs for NBA players
-    if (nbaPlayers.includes(playerName)) {
-        // Use a reliable image hosting service with direct links
-        return `https://raw.githubusercontent.com/jrobi32/budget-gm-frontend/main/public/images/${playerName.replace(/\s+/g, '_').replace(/\./g, '').replace(/'/g, '').replace(/"/g, '')}.jpg`;
-    } else if (fictionalPlayers.includes(playerName)) {
-        // Use placeholder images for fictional players
-        if (playerName === 'Joe Rogan') {
-            return 'https://i.imgur.com/placeholder1.jpg';
-        } else if (playerName === 'Logan Paul') {
-            return 'https://i.imgur.com/placeholder2.jpg';
-        } else if (playerName === 'Super Mario') {
-            return 'https://i.imgur.com/placeholder3.jpg';
-        } else if (playerName === 'Dwayne "The Rock" Johnson') {
-            return 'https://i.imgur.com/placeholder4.jpg';
-        } else if (playerName === 'Air Bud') {
-            return 'https://i.imgur.com/placeholder5.jpg';
-        }
+    if (fictionalImages[playerName]) {
+        return fictionalImages[playerName];
     }
     
     // Default image if no match
-    return 'https://via.placeholder.com/80?text=' + encodeURIComponent(playerName);
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(playerName)}&size=200&background=random`;
 };
 
 const TeamBuilder = () => {
