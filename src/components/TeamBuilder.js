@@ -5,6 +5,46 @@ import './TeamBuilder.css';
 // Get API URL from environment variable or use default
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
+// Function to get player image URL
+const getPlayerImageUrl = (playerName) => {
+    // For NBA players, use their name to construct a URL
+    // For fictional players, use a default image
+    const nbaPlayers = [
+        'Kevin Durant', 'LeBron James', 'Stephen Curry', 'Giannis Antetokounmpo', 
+        'Luka Doncic', 'Joel Embiid', 'Jayson Tatum', 'Devin Booker', 
+        'Anthony Edwards', 'Karl-Anthony Towns', 'Cade Cunningham', 'Naz Reid',
+        'Josh Giddey', 'Scottie Barnes', 'Stephon Castle', 'Jaren Jackson Jr.',
+        'Donte DiVincenzo', 'Andrew Nembhard', 'Duncan Robinson', 'Royce O\'Neale',
+        'Dalton Knecht'
+    ];
+    
+    const fictionalPlayers = [
+        'Joe Rogan', 'Logan Paul', 'Super Mario', 'Dwayne "The Rock" Johnson',
+        'Air Bud'
+    ];
+    
+    if (nbaPlayers.includes(playerName)) {
+        // Use a placeholder NBA player image service
+        return `https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/1040x760/${playerName.replace(/\s+/g, '').toLowerCase()}.png`;
+    } else if (fictionalPlayers.includes(playerName)) {
+        // Use a fun placeholder for fictional players
+        if (playerName === 'Joe Rogan') {
+            return 'https://i.imgur.com/example1.jpg'; // Replace with actual image URL
+        } else if (playerName === 'Logan Paul') {
+            return 'https://i.imgur.com/example2.jpg'; // Replace with actual image URL
+        } else if (playerName === 'Super Mario') {
+            return 'https://i.imgur.com/example3.jpg'; // Replace with actual image URL
+        } else if (playerName === 'Dwayne "The Rock" Johnson') {
+            return 'https://i.imgur.com/example4.jpg'; // Replace with actual image URL
+        } else if (playerName === 'Air Bud') {
+            return 'https://i.imgur.com/example5.jpg'; // Replace with actual image URL
+        }
+    }
+    
+    // Default image if no match
+    return 'https://via.placeholder.com/80';
+};
+
 const TeamBuilder = () => {
     const [playerPool, setPlayerPool] = useState({});
     const [selectedPlayers, setSelectedPlayers] = useState([]);
@@ -183,6 +223,15 @@ const TeamBuilder = () => {
                     <div className="selected-players">
                         {selectedPlayers.map(player => (
                             <div key={player.name} className="player-card">
+                                <img 
+                                    src={getPlayerImageUrl(player.name)} 
+                                    alt={player.name} 
+                                    className="player-image"
+                                    onError={(e) => {
+                                        e.target.onerror = null;
+                                        e.target.src = 'https://via.placeholder.com/80';
+                                    }}
+                                />
                                 <h3>{player.name}</h3>
                                 <p>Cost: ${player.cost}</p>
                                 <button onClick={() => removePlayer(player.name)}>Remove</button>
@@ -195,6 +244,15 @@ const TeamBuilder = () => {
                         <div className="player-stats">
                             {selectedPlayers.map(player => (
                                 <div key={player.name} className="player-stat">
+                                    <img 
+                                        src={getPlayerImageUrl(player.name)} 
+                                        alt={player.name} 
+                                        className="player-image"
+                                        onError={(e) => {
+                                            e.target.onerror = null;
+                                            e.target.src = 'https://via.placeholder.com/80';
+                                        }}
+                                    />
                                     <h4>{player.name}</h4>
                                     <p>PPG: {record.player_stats[player.name].ppg.toFixed(1)}</p>
                                     <p>RPG: {record.player_stats[player.name].rpg.toFixed(1)}</p>
@@ -219,6 +277,15 @@ const TeamBuilder = () => {
                             <div className="player-options">
                                 {playerOptions['$3'] && playerOptions['$3'].map(player => (
                                     <div key={player.name} className="player-option">
+                                        <img 
+                                            src={getPlayerImageUrl(player.name)} 
+                                            alt={player.name} 
+                                            className="player-image"
+                                            onError={(e) => {
+                                                e.target.onerror = null;
+                                                e.target.src = 'https://via.placeholder.com/80';
+                                            }}
+                                        />
                                         <h3>{player.name}</h3>
                                         <p>Cost: ${player.cost}</p>
                                         <button 
@@ -238,6 +305,15 @@ const TeamBuilder = () => {
                             <div className="player-options">
                                 {playerOptions['$2'] && playerOptions['$2'].map(player => (
                                     <div key={player.name} className="player-option">
+                                        <img 
+                                            src={getPlayerImageUrl(player.name)} 
+                                            alt={player.name} 
+                                            className="player-image"
+                                            onError={(e) => {
+                                                e.target.onerror = null;
+                                                e.target.src = 'https://via.placeholder.com/80';
+                                            }}
+                                        />
                                         <h3>{player.name}</h3>
                                         <p>Cost: ${player.cost}</p>
                                         <button 
@@ -257,6 +333,15 @@ const TeamBuilder = () => {
                             <div className="player-options">
                                 {playerOptions['$1'] && playerOptions['$1'].map(player => (
                                     <div key={player.name} className="player-option">
+                                        <img 
+                                            src={getPlayerImageUrl(player.name)} 
+                                            alt={player.name} 
+                                            className="player-image"
+                                            onError={(e) => {
+                                                e.target.onerror = null;
+                                                e.target.src = 'https://via.placeholder.com/80';
+                                            }}
+                                        />
                                         <h3>{player.name}</h3>
                                         <p>Cost: ${player.cost}</p>
                                         <button 
@@ -276,6 +361,15 @@ const TeamBuilder = () => {
                             <div className="player-options">
                                 {playerOptions['$0'] && playerOptions['$0'].map(player => (
                                     <div key={player.name} className="player-option">
+                                        <img 
+                                            src={getPlayerImageUrl(player.name)} 
+                                            alt={player.name} 
+                                            className="player-image"
+                                            onError={(e) => {
+                                                e.target.onerror = null;
+                                                e.target.src = 'https://via.placeholder.com/80';
+                                            }}
+                                        />
                                         <h3>{player.name}</h3>
                                         <p>Cost: ${player.cost}</p>
                                         <button 
