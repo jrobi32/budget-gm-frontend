@@ -10,8 +10,8 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 const getPlayerImageUrl = (playerName) => {
     // Check if it's a fictional player
     if (playerName === 'Joe Rogan' || playerName === 'Elon Musk' || playerName === 'Mark Zuckerberg') {
-        // Use a more appropriate placeholder for fictional players
-        return `https://ui-avatars.com/api/?name=${encodeURIComponent(playerName)}&background=random&color=fff&size=200&bold=true&format=svg`;
+        // Use a more appropriate placeholder for fictional players with a sports theme
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(playerName)}&background=1E88E5&color=fff&size=200&bold=true&format=svg`;
     }
     
     // For NBA players, use their official NBA.com image
@@ -21,7 +21,7 @@ const getPlayerImageUrl = (playerName) => {
     }
     
     // Fallback for any other players
-    return `https://ui-avatars.com/api/?name=${encodeURIComponent(playerName)}&background=random&color=fff&size=200&bold=true&format=svg`;
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(playerName)}&background=1E88E5&color=fff&size=200&bold=true&format=svg`;
 };
 
 const TeamBuilder = () => {
@@ -337,6 +337,7 @@ const TeamBuilder = () => {
                                         <button 
                                             onClick={() => selectPlayer(player)}
                                             disabled={budget < player.cost || selectedPlayers.length >= 5}
+                                            className="select-button"
                                         >
                                             Select
                                         </button>
@@ -368,6 +369,7 @@ const TeamBuilder = () => {
                                         <button 
                                             onClick={() => selectPlayer(player)}
                                             disabled={budget < player.cost || selectedPlayers.length >= 5}
+                                            className="select-button"
                                         >
                                             Select
                                         </button>
@@ -399,6 +401,7 @@ const TeamBuilder = () => {
                                         <button 
                                             onClick={() => selectPlayer(player)}
                                             disabled={budget < player.cost || selectedPlayers.length >= 5}
+                                            className="select-button"
                                         >
                                             Select
                                         </button>
@@ -430,6 +433,7 @@ const TeamBuilder = () => {
                                         <button 
                                             onClick={() => selectPlayer(player)}
                                             disabled={budget < player.cost || selectedPlayers.length >= 5}
+                                            className="select-button"
                                         >
                                             Select
                                         </button>
