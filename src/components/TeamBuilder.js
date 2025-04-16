@@ -32,6 +32,13 @@ const TeamBuilder = () => {
         loadPlayerPool();
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+    // Update player options whenever selected players change
+    useEffect(() => {
+        if (Object.keys(playerPool).length > 0) {
+            updatePlayerOptions(playerPool);
+        }
+    }, [selectedPlayers, playerPool]); // eslint-disable-line react-hooks/exhaustive-deps
+
     const updatePlayerOptions = (pool) => {
         // Create a list of all selected player names for quick lookup
         const selectedPlayerNames = selectedPlayers.map(p => p.name);
@@ -86,9 +93,6 @@ const TeamBuilder = () => {
         // Update budget
         setBudget(budget - player.cost);
         
-        // Update player options to remove the selected player
-        updatePlayerOptions(playerPool);
-        
         setError('');
     };
 
@@ -101,9 +105,6 @@ const TeamBuilder = () => {
             
             // Update budget
             setBudget(budget + player.cost);
-            
-            // Update player options to add the removed player back
-            updatePlayerOptions(playerPool);
         }
     };
 
