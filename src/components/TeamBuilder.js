@@ -215,7 +215,7 @@ const TeamBuilder = ({ onError, nickname }) => {
             console.log('Simulating team with players:', selectedPlayers.map(p => p.name));
             const response = await axios.post(`${API_URL}/api/simulate`, {
                 players: selectedPlayers.map(p => p.name),
-                player_name: nickname
+                player_name: nickname.trim()
             });
             
             console.log('Simulation response:', response.data);
