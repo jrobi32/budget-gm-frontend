@@ -23,18 +23,10 @@ const getPlayerImageUrl = (playerName) => {
         'Air Bud'
     ];
     
+    // Use direct image URLs for NBA players
     if (nbaPlayers.includes(playerName)) {
-        // Use a more reliable approach for NBA player images
-        // Create a player ID based on the name
-        const playerId = playerName
-            .toLowerCase()
-            .replace(/\s+/g, '-')
-            .replace(/\./g, '')
-            .replace(/'/g, '')
-            .replace(/"/g, '');
-            
-        // Use a reliable NBA player image service
-        return `https://a.espncdn.com/combiner/i?img=/i/headshots/nba/players/full/${playerId}.png&w=350&h=254`;
+        // Use a reliable image hosting service with direct links
+        return `https://raw.githubusercontent.com/jrobi32/budget-gm-frontend/main/public/images/${playerName.replace(/\s+/g, '_').replace(/\./g, '').replace(/'/g, '').replace(/"/g, '')}.jpg`;
     } else if (fictionalPlayers.includes(playerName)) {
         // Use placeholder images for fictional players
         if (playerName === 'Joe Rogan') {
@@ -272,23 +264,10 @@ const TeamBuilder = () => {
     };
 
     const handleImageError = (playerName) => {
-        const sources = getPlayerImageSources(playerName);
-        const currentIndex = imageSources[playerName] ? imageSources[playerName].indexOf(imageErrors[playerName] || '') : 0;
-        
-        // If we have more sources to try
-        if (currentIndex < sources.length - 1) {
-            // Try the next source
-            setImageErrors(prev => ({
-                ...prev,
-                [playerName]: sources[currentIndex + 1]
-            }));
-        } else {
-            // All sources failed, show placeholder
-            setImageErrors(prev => ({
-                ...prev,
-                [playerName]: 'placeholder'
-            }));
-        }
+        setImageErrors(prev => ({
+            ...prev,
+            [playerName]: true
+        }));
     };
 
     return (
@@ -303,9 +282,9 @@ const TeamBuilder = () => {
                     <div className="selected-players">
                         {selectedPlayers.map(player => (
                             <div key={player.name} className="player-card">
-                                {imageErrors[player.name] !== 'placeholder' ? (
+                                {!imageErrors[player.name] ? (
                                     <img 
-                                        src={imageErrors[player.name] || getPlayerImageSources(player.name)[0]} 
+                                        src={getPlayerImageUrl(player.name)} 
                                         alt={player.name} 
                                         className="player-image"
                                         onError={() => handleImageError(player.name)}
@@ -327,9 +306,9 @@ const TeamBuilder = () => {
                         <div className="player-stats">
                             {selectedPlayers.map(player => (
                                 <div key={player.name} className="player-stat">
-                                    {imageErrors[player.name] !== 'placeholder' ? (
+                                    {!imageErrors[player.name] ? (
                                         <img 
-                                            src={imageErrors[player.name] || getPlayerImageSources(player.name)[0]} 
+                                            src={getPlayerImageUrl(player.name)} 
                                             alt={player.name} 
                                             className="player-image"
                                             onError={() => handleImageError(player.name)}
@@ -363,9 +342,9 @@ const TeamBuilder = () => {
                             <div className="player-options">
                                 {playerOptions['$3'] && playerOptions['$3'].map(player => (
                                     <div key={player.name} className="player-option">
-                                        {imageErrors[player.name] !== 'placeholder' ? (
+                                        {!imageErrors[player.name] ? (
                                             <img 
-                                                src={imageErrors[player.name] || getPlayerImageSources(player.name)[0]} 
+                                                src={getPlayerImageUrl(player.name)} 
                                                 alt={player.name} 
                                                 className="player-image"
                                                 onError={() => handleImageError(player.name)}
@@ -394,9 +373,9 @@ const TeamBuilder = () => {
                             <div className="player-options">
                                 {playerOptions['$2'] && playerOptions['$2'].map(player => (
                                     <div key={player.name} className="player-option">
-                                        {imageErrors[player.name] !== 'placeholder' ? (
+                                        {!imageErrors[player.name] ? (
                                             <img 
-                                                src={imageErrors[player.name] || getPlayerImageSources(player.name)[0]} 
+                                                src={getPlayerImageUrl(player.name)} 
                                                 alt={player.name} 
                                                 className="player-image"
                                                 onError={() => handleImageError(player.name)}
@@ -425,9 +404,9 @@ const TeamBuilder = () => {
                             <div className="player-options">
                                 {playerOptions['$1'] && playerOptions['$1'].map(player => (
                                     <div key={player.name} className="player-option">
-                                        {imageErrors[player.name] !== 'placeholder' ? (
+                                        {!imageErrors[player.name] ? (
                                             <img 
-                                                src={imageErrors[player.name] || getPlayerImageSources(player.name)[0]} 
+                                                src={getPlayerImageUrl(player.name)} 
                                                 alt={player.name} 
                                                 className="player-image"
                                                 onError={() => handleImageError(player.name)}
@@ -456,9 +435,9 @@ const TeamBuilder = () => {
                             <div className="player-options">
                                 {playerOptions['$0'] && playerOptions['$0'].map(player => (
                                     <div key={player.name} className="player-option">
-                                        {imageErrors[player.name] !== 'placeholder' ? (
+                                        {!imageErrors[player.name] ? (
                                             <img 
-                                                src={imageErrors[player.name] || getPlayerImageSources(player.name)[0]} 
+                                                src={getPlayerImageUrl(player.name)} 
                                                 alt={player.name} 
                                                 className="player-image"
                                                 onError={() => handleImageError(player.name)}
