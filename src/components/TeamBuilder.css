@@ -33,7 +33,7 @@ html, body {
 .selected-players {
     display: flex;
     flex-wrap: wrap;
-    justify-content: flex-start;
+    justify-content: center;
     gap: 15px;
     margin: 15px auto;
     width: 100%;
@@ -91,7 +91,7 @@ html, body {
     width: 100%;
     display: flex;
     flex-wrap: wrap;
-    justify-content: flex-start;
+    justify-content: center;
     gap: 15px;
     margin: 0 auto;
     padding: 0 10px;
@@ -152,7 +152,7 @@ html, body {
 .player-stats {
     display: flex;
     flex-wrap: wrap;
-    justify-content: flex-start;
+    justify-content: center;
     gap: 15px;
     margin: 10px auto;
     width: 100%;
