@@ -156,8 +156,8 @@ const TeamBuilder = ({ onError, nickname }) => {
                     !selectedPlayerNames.includes(player.name)
                 );
                 filteredOptions[category] = availablePlayers.map(player => ({
-                    ...player,
-                    cost: parseInt(category.replace('$', ''))
+                        ...player,
+                        cost: parseInt(category.replace('$', ''))
                 }));
             } else {
                 filteredOptions[category] = [];
@@ -245,12 +245,12 @@ const TeamBuilder = ({ onError, nickname }) => {
                 <div className="loading">Loading...</div>
             ) : (
                 <>
-                    <div className="team-section">
+            <div className="team-section">
                         <h2>Selected Players</h2>
-                        <div className="budget-display">
-                            Remaining Budget: ${budget}
-                        </div>
-                        <div className="selected-players">
+                <div className="budget-display">
+                    Remaining Budget: ${budget}
+                </div>
+                <div className="selected-players">
                             {selectedPlayers.map((player, index) => (
                                 <div key={index} className="player-card">
                                     {!imageErrors[player.name] ? (
@@ -266,9 +266,9 @@ const TeamBuilder = ({ onError, nickname }) => {
                                         </div>
                                     )}
                                     <div className="player-info">
-                                        <h3>{player.name}</h3>
-                                        <p>Cost: ${player.cost}</p>
-                                    </div>
+                            <h3>{player.name}</h3>
+                            <p>Cost: ${player.cost}</p>
+                        </div>
                                     <button 
                                         onClick={() => removePlayer(player.name)}
                                         className="remove-button"
@@ -290,16 +290,17 @@ const TeamBuilder = ({ onError, nickname }) => {
                         {record && (
                             <div className="record-display">
                                 <h3>Season Record: {record.wins}-{record.losses}</h3>
+                                <p>Win Probability: {(record.win_probability * 100).toFixed(1)}%</p>
                             </div>
                         )}
-                    </div>
+            </div>
 
-                    <div className="player-section">
-                        <h2>Available Players</h2>
+            <div className="player-section">
+                <h2>Available Players</h2>
                         {Object.entries(playerOptions).map(([category, players]) => (
                             <div key={category} className="player-category">
                                 <div className="category-header">{category} Players</div>
-                                <div className="player-options">
+                <div className="player-options">
                                     {players.map((player, index) => (
                                         <div key={index} className="player-option">
                                             {!imageErrors[player.name] ? (
@@ -315,20 +316,20 @@ const TeamBuilder = ({ onError, nickname }) => {
                                                 </div>
                                             )}
                                             <div className="player-info">
-                                                <h3>{player.name}</h3>
-                                                <p>Cost: ${player.cost}</p>
+                            <h3>{player.name}</h3>
+                            <p>Cost: ${player.cost}</p>
                                             </div>
-                                            <button 
-                                                onClick={() => selectPlayer(player)}
-                                                disabled={budget < player.cost || selectedPlayers.length >= 5}
+                            <button 
+                                onClick={() => selectPlayer(player)}
+                                disabled={budget < player.cost || selectedPlayers.length >= 5}
                                                 className="select-button"
-                                            >
-                                                Select
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+                            >
+                                Select
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            </div>
                         ))}
                     </div>
                 </>
