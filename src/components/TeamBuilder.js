@@ -132,7 +132,7 @@ const TeamBuilder = () => {
                 throw new Error('Empty player pool received');
             }
             setPlayerPool(response.data);
-            updatePlayerOptions(response.data);
+            updatePlayerOptions(response.data, []);  // Pass empty selected players initially
             setError('');
         } catch (error) {
             console.error('Error loading player pool:', error);
@@ -146,8 +146,8 @@ const TeamBuilder = () => {
         }
     };
 
-    const updatePlayerOptions = (pool) => {
-        const selectedPlayerNames = selectedPlayers.map(p => p.name);
+    const updatePlayerOptions = (pool, currentSelectedPlayers) => {
+        const selectedPlayerNames = currentSelectedPlayers.map(p => p.name);
         const filteredOptions = {};
         
         ['$3', '$2', '$1', '$0'].forEach(category => {
@@ -186,7 +186,7 @@ const TeamBuilder = () => {
         const newSelectedPlayers = [...selectedPlayers, player];
         setSelectedPlayers(newSelectedPlayers);
         setBudget(budget - player.cost);
-        updatePlayerOptions(playerPool);
+        updatePlayerOptions(playerPool, newSelectedPlayers);  // Pass the updated selected players
         setError('');
     };
 
@@ -196,7 +196,7 @@ const TeamBuilder = () => {
             const newSelectedPlayers = selectedPlayers.filter(p => p.name !== playerName);
             setSelectedPlayers(newSelectedPlayers);
             setBudget(budget + player.cost);
-            updatePlayerOptions(playerPool);
+            updatePlayerOptions(playerPool, newSelectedPlayers);  // Pass the updated selected players
         }
     };
 
@@ -207,7 +207,7 @@ const TeamBuilder = () => {
         }
 
         try {
-            const response = await axios.post(`${API_URL}/api/simulate`, {
+            const response = await axios.post(`${API_URL}/api/simulate_team`, {
                 players: selectedPlayers.map(p => p.name)
             });
             
@@ -277,7 +277,7 @@ const TeamBuilder = () => {
                         )}
                         {record && (
                             <div className="record-display">
-                                <h3>Season Record: {record.record}</h3>
+                                <h3>Season Record: {record.wins}-{record.losses}</h3>
                             </div>
                         )}
                     </div>
