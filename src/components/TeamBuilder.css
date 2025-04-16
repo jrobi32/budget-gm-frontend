@@ -42,6 +42,20 @@
     background-color: #f0f0f0;
 }
 
+.player-image-placeholder {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin: 0 auto 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #3498db;
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+}
+
 .player-category {
     margin-bottom: 20px;
 }
