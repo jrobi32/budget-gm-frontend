@@ -113,6 +113,11 @@ const TeamBuilder = () => {
     const [dailyChallenge, setDailyChallenge] = useState(null);
     const [isSubmitted, setIsSubmitted] = useState(false);
 
+    useEffect(() => {
+        loadPlayerPool();
+        fetchDailyChallenge();
+    }, []);
+
     const loadPlayerPool = async () => {
         try {
             console.log(`Fetching player pool from ${API_URL}/api/player_pool`);
@@ -126,36 +131,28 @@ const TeamBuilder = () => {
         }
     };
 
-    useEffect(() => {
-        loadPlayerPool();
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-    // Update player options whenever selected players change
-    useEffect(() => {
-        if (Object.keys(playerPool).length > 0) {
-            updatePlayerOptions(playerPool);
+    const fetchDailyChallenge = async () => {
+        try {
+            const today = new Date().toISOString().split('T')[0];
+            const response = await axios.get(`${API_URL}/api/challenge/${today}`);
+            if (response.data) {
+                setDailyChallenge(response.data);
+                setBudget(response.data.budget);
+            }
+        } catch (error) {
+            console.error('Error fetching daily challenge:', error);
         }
-    }, [selectedPlayers, playerPool]); // eslint-disable-line react-hooks/exhaustive-deps
+    };
 
     const updatePlayerOptions = (pool) => {
-        // Create a list of all selected player names for quick lookup
         const selectedPlayerNames = selectedPlayers.map(p => p.name);
-        console.log('Selected player names:', selectedPlayerNames);
-        
-        // Create a new object to store filtered players by category
         const filteredOptions = {};
         
-        // Process each cost category
         ['$3', '$2', '$1', '$0'].forEach(category => {
             if (pool[category]) {
-                // Filter out players that are already selected
                 const availablePlayers = pool[category].filter(player => 
                     !selectedPlayerNames.includes(player.name)
                 );
-                
-                console.log(`Category ${category}: ${availablePlayers.length} available players`);
-                
-                // Add available players to options with their cost
                 filteredOptions[category] = availablePlayers.map(player => ({
                     ...player,
                     cost: parseInt(category.replace('$', ''))
@@ -165,12 +162,10 @@ const TeamBuilder = () => {
             }
         });
         
-        console.log('Final player options:', filteredOptions);
         setPlayerOptions(filteredOptions);
     };
 
     const selectPlayer = (player) => {
-        // Check if player is already selected
         if (selectedPlayers.some(p => p.name === player.name)) {
             setError('Player already selected');
             return;
@@ -185,24 +180,17 @@ const TeamBuilder = () => {
             return;
         }
 
-        // Add player to selected players
         const newSelectedPlayers = [...selectedPlayers, player];
         setSelectedPlayers(newSelectedPlayers);
-        
-        // Update budget
         setBudget(budget - player.cost);
-        
         setError('');
     };
 
     const removePlayer = (playerName) => {
         const player = selectedPlayers.find(p => p.name === playerName);
         if (player) {
-            // Remove player from selected players
             const newSelectedPlayers = selectedPlayers.filter(p => p.name !== playerName);
             setSelectedPlayers(newSelectedPlayers);
-            
-            // Update budget
             setBudget(budget + player.cost);
         }
     };
@@ -214,53 +202,15 @@ const TeamBuilder = () => {
         }
 
         try {
-            console.log(`Simulating team with players: ${selectedPlayers.map(p => p.name).join(', ')}`);
-            const response = await axios.post(`${API_URL}/api/simulate`, {
-                players: selectedPlayers.map(p => p.name),
-                playerName: playerName
-            });
-            console.log('Simulation response:', response.data);
-            
-            // Generate hypothetical player stats based on cost
-            const playerStats = {};
-            selectedPlayers.forEach(player => {
-                // Base stats vary by cost tier
-                let baseStats = {
-                    ppg: 0,
-                    rpg: 0,
-                    apg: 0,
-                    spg: 0,
-                    bpg: 0
-                };
-                
-                // Set base stats based on cost tier
-                if (player.cost === 3) {
-                    baseStats = { ppg: 25, rpg: 7, apg: 5, spg: 1.5, bpg: 0.5 };
-                } else if (player.cost === 2) {
-                    baseStats = { ppg: 18, rpg: 5, apg: 4, spg: 1, bpg: 0.3 };
-                } else if (player.cost === 1) {
-                    baseStats = { ppg: 12, rpg: 4, apg: 3, spg: 0.8, bpg: 0.2 };
-                } else {
-                    baseStats = { ppg: 8, rpg: 3, apg: 2, spg: 0.5, bpg: 0.1 };
-                }
-                
-                // Add some randomness (±10%)
-                playerStats[player.name] = {
-                    ppg: baseStats.ppg * (0.9 + Math.random() * 0.2),
-                    rpg: baseStats.rpg * (0.9 + Math.random() * 0.2),
-                    apg: baseStats.apg * (0.9 + Math.random() * 0.2),
-                    spg: baseStats.spg * (0.9 + Math.random() * 0.2),
-                    bpg: baseStats.bpg * (0.9 + Math.random() * 0.2)
-                };
+            const response = await axios.post(`${API_URL}/api/simulate_team`, {
+                players: selectedPlayers.map(p => p.name)
             });
             
-            // Add player stats to the response
-            const recordWithStats = {
-                ...response.data,
-                player_stats: playerStats
-            };
+            if (dailyChallenge) {
+                await submitDailyChallenge(response.data.record);
+            }
             
-            setRecord(recordWithStats);
+            setRecord(response.data);
             setIsSimulated(true);
             setError('');
         } catch (error) {
@@ -269,146 +219,16 @@ const TeamBuilder = () => {
         }
     };
 
-    const getPlayerImageSources = (playerName) => {
-        if (imageSources[playerName]) {
-            return imageSources[playerName];
-        }
-
-        const sources = [];
-        
-        // For NBA players, try multiple sources
-        const nbaPlayers = [
-            'Kevin Durant', 'LeBron James', 'Stephen Curry', 'Giannis Antetokounmpo', 
-            'Luka Doncic', 'Joel Embiid', 'Jayson Tatum', 'Devin Booker', 
-            'Anthony Edwards', 'Karl-Anthony Towns', 'Cade Cunningham', 'Naz Reid',
-            'Josh Giddey', 'Scottie Barnes', 'Stephon Castle', 'Jaren Jackson Jr.',
-            'Donte DiVincenzo', 'Andrew Nembhard', 'Duncan Robinson', 'Royce O\'Neale',
-            'Dalton Knecht', 'De\'Aaron Fox', 'Bennedict Mathurin', 'Kyle Filipowski'
-        ];
-        
-        if (nbaPlayers.includes(playerName)) {
-            // Create a player ID based on the name
-            const playerId = playerName
-                .toLowerCase()
-                .replace(/\s+/g, '-')
-                .replace(/\./g, '')
-                .replace(/'/g, '')
-                .replace(/"/g, '');
-                
-            // Try ESPN first
-            sources.push(`https://a.espncdn.com/combiner/i?img=/i/headshots/nba/players/full/${playerId}.png&w=350&h=254`);
-            
-            // Try NBA.com as fallback
-            const nbaId = playerName.replace(/\s+/g, '').replace(/\./g, '').replace(/'/g, '');
-            sources.push(`https://cdn.nba.com/headshots/nba/latest/1040x760/${nbaId}.png`);
-            
-            // Try Basketball Reference as another fallback
-            sources.push(`https://www.basketball-reference.com/req/202106291/images/players/${playerId}.jpg`);
-        } else {
-            // For fictional players, use placeholder images
-            sources.push(getPlayerImageUrl(playerName));
-        }
-        
-        // Store the sources for this player
-        setImageSources(prev => ({
-            ...prev,
-            [playerName]: sources
-        }));
-        
-        return sources;
-    };
-
-    const handleImageError = (playerName) => {
-        setImageErrors(prev => ({
-            ...prev,
-            [playerName]: true
-        }));
-    };
-
-    useEffect(() => {
-        fetchDailyChallenge();
-    }, []);
-
-    const fetchDailyChallenge = async () => {
-        try {
-            // Get today's date in YYYY-MM-DD format
-            const today = new Date().toISOString().split('T')[0];
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/api/challenge/${today}`);
-            const data = await response.json();
-            if (response.ok) {
-                setDailyChallenge(data);
-                setBudget(data.budget);
-                // Load the player pool for the daily challenge
-                const playerPoolResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/player_pool`);
-                const playerPool = await playerPoolResponse.json();
-                setPlayerOptions(playerPool);
-            }
-        } catch (error) {
-            console.error('Error fetching daily challenge:', error);
-        }
-    };
-
-    const handlePlayerSelect = (player) => {
-        if (selectedPlayers.length < 5 && !selectedPlayers.includes(player)) {
-            setSelectedPlayers([...selectedPlayers, player]);
-            updatePlayerOptions(player);
-        }
-    };
-
-    const handlePlayerRemove = (playerToRemove) => {
-        setSelectedPlayers(selectedPlayers.filter(player => player !== playerToRemove));
-        setPlayerOptions([...playerOptions, playerToRemove]);
-    };
-
-    const updatePlayerOptionsForDailyChallenge = (selectedPlayer) => {
-        setPlayerOptions(playerOptions.filter(player => player !== selectedPlayer));
-    };
-
-    const simulateTeamForDailyChallenge = async () => {
-        if (selectedPlayers.length !== 5) {
-            alert('Please select exactly 5 players.');
-            return;
-        }
-
-        try {
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/api/simulate_team`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ players: selectedPlayers }),
-            });
-
-            const data = await response.json();
-            if (response.ok) {
-                setRecord(data.record);
-                
-                // If this is a daily challenge, submit the team
-                if (dailyChallenge) {
-                    submitDailyChallenge(data.record);
-                }
-            }
-        } catch (error) {
-            console.error('Error simulating team:', error);
-        }
-    };
-
     const submitDailyChallenge = async (teamRecord) => {
         try {
             const today = new Date().toISOString().split('T')[0];
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/api/submit_team`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    team: selectedPlayers,
-                    date: today,
-                    record: teamRecord
-                }),
+            const response = await axios.post(`${API_URL}/api/submit_team`, {
+                team: selectedPlayers.map(p => p.name),
+                date: today,
+                record: teamRecord
             });
 
-            if (response.ok) {
+            if (response.status === 200) {
                 setIsSubmitted(true);
             }
         } catch (error) {
@@ -452,7 +272,7 @@ const TeamBuilder = () => {
                                 <p>Cost: ${player.cost}</p>
                             </div>
                             <button 
-                                onClick={() => handlePlayerRemove(player)}
+                                onClick={() => removePlayer(player.name)}
                                 className="remove-button"
                             >
                                 Remove
@@ -465,7 +285,7 @@ const TeamBuilder = () => {
                     {selectedPlayers.length === 5 && !isSubmitted && (
                         <button 
                             className="simulate-button"
-                            onClick={simulateTeamForDailyChallenge}
+                            onClick={simulateTeam}
                         >
                             Simulate Season
                         </button>
@@ -478,36 +298,42 @@ const TeamBuilder = () => {
                 </div>
             </div>
 
-            <div className="player-pool">
+            <div className="player-section">
                 <h2>Available Players</h2>
-                <div className="player-options">
-                    {playerOptions.map((player, index) => (
-                        <div key={index} className="player-option">
-                            {!imageErrors[player.name] ? (
-                                <img 
-                                    src={getPlayerImageUrl(player.name)} 
-                                    alt={player.name} 
-                                    className="player-image"
-                                    onError={() => handleImageError(player.name)}
-                                />
-                            ) : (
-                                <div className="player-image-placeholder">
-                                    {player.name.charAt(0)}
+                {Object.entries(playerOptions).map(([category, players]) => (
+                    <div key={category} className="player-category">
+                        <div className="category-header">{category} Players</div>
+                        <div className="player-options">
+                            {players.map((player, index) => (
+                                <div key={index} className="player-option">
+                                    {!imageErrors[player.name] ? (
+                                        <img 
+                                            src={getPlayerImageUrl(player.name)} 
+                                            alt={player.name} 
+                                            className="player-image"
+                                            onError={() => handleImageError(player.name)}
+                                        />
+                                    ) : (
+                                        <div className="player-image-placeholder">
+                                            {player.name.charAt(0)}
+                                        </div>
+                                    )}
+                                    <div className="player-info">
+                                        <h3>{player.name}</h3>
+                                        <p>Cost: ${player.cost}</p>
+                                    </div>
+                                    <button 
+                                        onClick={() => selectPlayer(player)}
+                                        disabled={budget < player.cost || selectedPlayers.length >= 5}
+                                        className="select-button"
+                                    >
+                                        Select
+                                    </button>
                                 </div>
-                            )}
-                            <div className="player-info">
-                                <h3>{player.name}</h3>
-                                <p>Cost: ${player.cost}</p>
-                            </div>
-                            <button 
-                                onClick={() => handlePlayerSelect(player)}
-                                className="select-button"
-                            >
-                                Select
-                            </button>
+                            ))}
                         </div>
-                    ))}
-                </div>
+                    </div>
+                ))}
             </div>
         </div>
     );
