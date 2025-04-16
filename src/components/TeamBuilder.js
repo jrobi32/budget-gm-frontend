@@ -207,7 +207,7 @@ const TeamBuilder = () => {
         }
 
         try {
-            const response = await axios.post(`${API_URL}/api/simulate_team`, {
+            const response = await axios.post(`${API_URL}/api/simulate`, {
                 players: selectedPlayers.map(p => p.name)
             });
             
