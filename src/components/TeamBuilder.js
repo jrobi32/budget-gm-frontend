@@ -103,13 +103,15 @@ const TeamBuilder = () => {
     const [playerPool, setPlayerPool] = useState({});
     const [selectedPlayers, setSelectedPlayers] = useState([]);
     const [playerOptions, setPlayerOptions] = useState({});
-    const [budget, setBudget] = useState(10);
+    const [budget, setBudget] = useState(100);
     const [record, setRecord] = useState(null);
     const [playerName, setPlayerName] = useState('');
     const [error, setError] = useState('');
     const [isSimulated, setIsSimulated] = useState(false);
     const [imageErrors, setImageErrors] = useState({});
     const [imageSources, setImageSources] = useState({});
+    const [dailyChallenge, setDailyChallenge] = useState(null);
+    const [isSubmitted, setIsSubmitted] = useState(false);
 
     const loadPlayerPool = async () => {
         try {
@@ -323,236 +325,190 @@ const TeamBuilder = () => {
         }));
     };
 
+    useEffect(() => {
+        fetchDailyChallenge();
+    }, []);
+
+    const fetchDailyChallenge = async () => {
+        try {
+            // Get today's date in YYYY-MM-DD format
+            const today = new Date().toISOString().split('T')[0];
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/api/challenge/${today}`);
+            const data = await response.json();
+            if (response.ok) {
+                setDailyChallenge(data);
+                setBudget(data.budget);
+                // Load the player pool for the daily challenge
+                const playerPoolResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/player_pool`);
+                const playerPool = await playerPoolResponse.json();
+                setPlayerOptions(playerPool);
+            }
+        } catch (error) {
+            console.error('Error fetching daily challenge:', error);
+        }
+    };
+
+    const handlePlayerSelect = (player) => {
+        if (selectedPlayers.length < 5 && !selectedPlayers.includes(player)) {
+            setSelectedPlayers([...selectedPlayers, player]);
+            updatePlayerOptions(player);
+        }
+    };
+
+    const handlePlayerRemove = (playerToRemove) => {
+        setSelectedPlayers(selectedPlayers.filter(player => player !== playerToRemove));
+        setPlayerOptions([...playerOptions, playerToRemove]);
+    };
+
+    const updatePlayerOptionsForDailyChallenge = (selectedPlayer) => {
+        setPlayerOptions(playerOptions.filter(player => player !== selectedPlayer));
+    };
+
+    const simulateTeamForDailyChallenge = async () => {
+        if (selectedPlayers.length !== 5) {
+            alert('Please select exactly 5 players.');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/api/simulate_team`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ players: selectedPlayers }),
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                setRecord(data.record);
+                
+                // If this is a daily challenge, submit the team
+                if (dailyChallenge) {
+                    submitDailyChallenge(data.record);
+                }
+            }
+        } catch (error) {
+            console.error('Error simulating team:', error);
+        }
+    };
+
+    const submitDailyChallenge = async (teamRecord) => {
+        try {
+            const today = new Date().toISOString().split('T')[0];
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/api/submit_team`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    team: selectedPlayers,
+                    date: today,
+                    record: teamRecord
+                }),
+            });
+
+            if (response.ok) {
+                setIsSubmitted(true);
+            }
+        } catch (error) {
+            console.error('Error submitting daily challenge:', error);
+        }
+    };
+
     return (
         <div className="team-builder">
-            <div className="team-section">
-                <h2>Your Team</h2>
-                <div className="budget-display">
-                    Remaining Budget: ${budget}
-                </div>
-                
-                {!isSimulated ? (
-                    <div className="selected-players">
-                        {selectedPlayers.map(player => (
-                            <div key={player.name} className="player-card">
-                                {!imageErrors[player.name] ? (
-                                    <img 
-                                        src={getPlayerImageUrl(player.name)} 
-                                        alt={player.name} 
-                                        className="player-image"
-                                        onError={() => handleImageError(player.name)}
-                                    />
-                                ) : (
-                                    <div className="player-image-placeholder">
-                                        {player.name.charAt(0)}
-                                    </div>
-                                )}
-                                <div className="player-info">
-                                    <h3>{player.name}</h3>
-                                    <p>Cost: ${player.cost}</p>
-                                </div>
-                                <button 
-                                    onClick={() => removePlayer(player.name)}
-                                    className="remove-button"
-                                >
-                                    Remove
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="record-display">
-                        <h3>Projected Record: {record.record}</h3>
-                        <div className="player-stats">
-                            {selectedPlayers.map(player => (
-                                <div key={player.name} className="player-stat">
-                                    {!imageErrors[player.name] ? (
-                                        <img 
-                                            src={getPlayerImageUrl(player.name)} 
-                                            alt={player.name} 
-                                            className="player-image"
-                                            onError={() => handleImageError(player.name)}
-                                        />
-                                    ) : (
-                                        <div className="player-image-placeholder">
-                                            {player.name.charAt(0)}
-                                        </div>
-                                    )}
-                                    <h4>{player.name}</h4>
-                                    <p>PPG: {record.player_stats[player.name].ppg.toFixed(1)}</p>
-                                    <p>RPG: {record.player_stats[player.name].rpg.toFixed(1)}</p>
-                                    <p>APG: {record.player_stats[player.name].apg.toFixed(1)}</p>
-                                    <p>SPG: {record.player_stats[player.name].spg.toFixed(1)}</p>
-                                    <p>BPG: {record.player_stats[player.name].bpg.toFixed(1)}</p>
-                                </div>
-                            ))}
+            {dailyChallenge && (
+                <div className="daily-challenge">
+                    <h2>Daily Challenge</h2>
+                    <p>{dailyChallenge.description}</p>
+                    {isSubmitted && (
+                        <div className="submission-success">
+                            <p>Team submitted successfully! Check back tomorrow for a new challenge.</p>
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
+            )}
+
+            <div className="team-section">
+                <h2>Selected Players</h2>
+                <div className="selected-players">
+                    {selectedPlayers.map((player, index) => (
+                        <div key={index} className="player-card">
+                            {!imageErrors[player.name] ? (
+                                <img 
+                                    src={getPlayerImageUrl(player.name)} 
+                                    alt={player.name} 
+                                    className="player-image"
+                                    onError={() => handleImageError(player.name)}
+                                />
+                            ) : (
+                                <div className="player-image-placeholder">
+                                    {player.name.charAt(0)}
+                                </div>
+                            )}
+                            <div className="player-info">
+                                <h3>{player.name}</h3>
+                                <p>Cost: ${player.cost}</p>
+                            </div>
+                            <button 
+                                onClick={() => handlePlayerRemove(player)}
+                                className="remove-button"
+                            >
+                                Remove
+                            </button>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="simulation-section">
+                    {selectedPlayers.length === 5 && !isSubmitted && (
+                        <button 
+                            className="simulate-button"
+                            onClick={simulateTeamForDailyChallenge}
+                        >
+                            Simulate Season
+                        </button>
+                    )}
+                    {record && (
+                        <div className="record-display">
+                            <h3>Season Record: {record.record}</h3>
+                        </div>
+                    )}
+                </div>
             </div>
 
-            {!isSimulated && (
-                <>
-                    <div className="player-section">
-                        <h2>Available Players</h2>
-                        
-                        {/* $3 Players */}
-                        <div className="player-category">
-                            <div className="category-header">$3 Players</div>
-                            <div className="player-options">
-                                {playerOptions['$3'] && playerOptions['$3'].map(player => (
-                                    <div key={player.name} className="player-option">
-                                        {!imageErrors[player.name] ? (
-                                            <img 
-                                                src={getPlayerImageUrl(player.name)} 
-                                                alt={player.name} 
-                                                className="player-image"
-                                                onError={() => handleImageError(player.name)}
-                                            />
-                                        ) : (
-                                            <div className="player-image-placeholder">
-                                                {player.name.charAt(0)}
-                                            </div>
-                                        )}
-                                        <div className="player-info">
-                                            <h3>{player.name}</h3>
-                                            <p>Cost: ${player.cost}</p>
-                                        </div>
-                                        <button 
-                                            onClick={() => selectPlayer(player)}
-                                            disabled={budget < player.cost || selectedPlayers.length >= 5}
-                                            className="select-button"
-                                        >
-                                            Select
-                                        </button>
-                                    </div>
-                                ))}
+            <div className="player-pool">
+                <h2>Available Players</h2>
+                <div className="player-options">
+                    {playerOptions.map((player, index) => (
+                        <div key={index} className="player-option">
+                            {!imageErrors[player.name] ? (
+                                <img 
+                                    src={getPlayerImageUrl(player.name)} 
+                                    alt={player.name} 
+                                    className="player-image"
+                                    onError={() => handleImageError(player.name)}
+                                />
+                            ) : (
+                                <div className="player-image-placeholder">
+                                    {player.name.charAt(0)}
+                                </div>
+                            )}
+                            <div className="player-info">
+                                <h3>{player.name}</h3>
+                                <p>Cost: ${player.cost}</p>
                             </div>
+                            <button 
+                                onClick={() => handlePlayerSelect(player)}
+                                className="select-button"
+                            >
+                                Select
+                            </button>
                         </div>
-                        
-                        {/* $2 Players */}
-                        <div className="player-category">
-                            <div className="category-header">$2 Players</div>
-                            <div className="player-options">
-                                {playerOptions['$2'] && playerOptions['$2'].map(player => (
-                                    <div key={player.name} className="player-option">
-                                        {!imageErrors[player.name] ? (
-                                            <img 
-                                                src={getPlayerImageUrl(player.name)} 
-                                                alt={player.name} 
-                                                className="player-image"
-                                                onError={() => handleImageError(player.name)}
-                                            />
-                                        ) : (
-                                            <div className="player-image-placeholder">
-                                                {player.name.charAt(0)}
-                                            </div>
-                                        )}
-                                        <div className="player-info">
-                                            <h3>{player.name}</h3>
-                                            <p>Cost: ${player.cost}</p>
-                                        </div>
-                                        <button 
-                                            onClick={() => selectPlayer(player)}
-                                            disabled={budget < player.cost || selectedPlayers.length >= 5}
-                                            className="select-button"
-                                        >
-                                            Select
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                        
-                        {/* $1 Players */}
-                        <div className="player-category">
-                            <div className="category-header">$1 Players</div>
-                            <div className="player-options">
-                                {playerOptions['$1'] && playerOptions['$1'].map(player => (
-                                    <div key={player.name} className="player-option">
-                                        {!imageErrors[player.name] ? (
-                                            <img 
-                                                src={getPlayerImageUrl(player.name)} 
-                                                alt={player.name} 
-                                                className="player-image"
-                                                onError={() => handleImageError(player.name)}
-                                            />
-                                        ) : (
-                                            <div className="player-image-placeholder">
-                                                {player.name.charAt(0)}
-                                            </div>
-                                        )}
-                                        <div className="player-info">
-                                            <h3>{player.name}</h3>
-                                            <p>Cost: ${player.cost}</p>
-                                        </div>
-                                        <button 
-                                            onClick={() => selectPlayer(player)}
-                                            disabled={budget < player.cost || selectedPlayers.length >= 5}
-                                            className="select-button"
-                                        >
-                                            Select
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                        
-                        {/* $0 Players */}
-                        <div className="player-category">
-                            <div className="category-header">$0 Players</div>
-                            <div className="player-options">
-                                {playerOptions['$0'] && playerOptions['$0'].map(player => (
-                                    <div key={player.name} className="player-option">
-                                        {!imageErrors[player.name] ? (
-                                            <img 
-                                                src={getPlayerImageUrl(player.name)} 
-                                                alt={player.name} 
-                                                className="player-image"
-                                                onError={() => handleImageError(player.name)}
-                                            />
-                                        ) : (
-                                            <div className="player-image-placeholder">
-                                                {player.name.charAt(0)}
-                                            </div>
-                                        )}
-                                        <div className="player-info">
-                                            <h3>{player.name}</h3>
-                                            <p>Cost: ${player.cost}</p>
-                                        </div>
-                                        <button 
-                                            onClick={() => selectPlayer(player)}
-                                            disabled={budget < player.cost || selectedPlayers.length >= 5}
-                                            className="select-button"
-                                        >
-                                            Select
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    {error && <div className="error-message">{error}</div>}
-
-                    <div className="simulation-section">
-                        <input
-                            type="text"
-                            value={playerName}
-                            onChange={(e) => setPlayerName(e.target.value)}
-                            placeholder="Don't forget to enter a nickname!"
-                            className="player-name-input"
-                        />
-                        <button 
-                            onClick={simulateTeam}
-                            disabled={selectedPlayers.length !== 5 || !playerName}
-                            className="simulate-button"
-                        >
-                            Simulate Team
-                        </button>
-                    </div>
-                </>
-            )}
+                    ))}
+                </div>
+            </div>
         </div>
     );
 };
