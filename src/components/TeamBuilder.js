@@ -8,10 +8,20 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 // Function to get player image URL
 const getPlayerImageUrl = (playerName) => {
-    // Check if it's a fictional player
-    if (playerName === 'Joe Rogan' || playerName === 'Elon Musk' || playerName === 'Mark Zuckerberg') {
-        // Use a more appropriate placeholder for fictional players with a sports theme
-        return `https://ui-avatars.com/api/?name=${encodeURIComponent(playerName)}&background=1E88E5&color=fff&size=200&bold=true&format=svg`;
+    // For fictional players, use specific images from various sources
+    const fictionalImages = {
+        'Joe Rogan': 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2d/Joe_Rogan_2019_cropped.jpg/440px-Joe_Rogan_2019_cropped.jpg',
+        'Elon Musk': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Elon_Musk_Royal_Society_%28crop2%29.jpg/440px-Elon_Musk_Royal_Society_%28crop2%29.jpg',
+        'Mark Zuckerberg': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Mark_Zuckerberg_F8_2019_Keynote_%2832830578717%29_%28cropped%29.jpg/440px-Mark_Zuckerberg_F8_2019_Keynote_%2832830578717%29_%28cropped%29.jpg',
+        'Logan Paul': 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Logan_Paul_in_2019_by_Glenn_Francis.jpg/440px-Logan_Paul_in_2019_by_Glenn_Francis.jpg',
+        'Super Mario': 'https://upload.wikimedia.org/wikipedia/en/thumb/5/50/Mario_%28Nintendo_character%29.jpg/440px-Mario_%28Nintendo_character%29.jpg',
+        'Dwayne "The Rock" Johnson': 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Dwayne_Johnson_2%2C_2013.jpg/440px-Dwayne_Johnson_2%2C_2013.jpg',
+        'Air Bud': 'https://upload.wikimedia.org/wikipedia/en/thumb/3/3c/Air_Bud_poster.jpg/440px-Air_Bud_poster.jpg'
+    };
+    
+    // Check if it's a fictional player with a specific image
+    if (fictionalImages[playerName]) {
+        return fictionalImages[playerName];
     }
     
     // For NBA players, use their official NBA.com image
@@ -272,9 +282,16 @@ const TeamBuilder = () => {
                                         {player.name.charAt(0)}
                                     </div>
                                 )}
-                                <h3>{player.name}</h3>
-                                <p>Cost: ${player.cost}</p>
-                                <button onClick={() => removePlayer(player.name)}>Remove</button>
+                                <div className="player-info">
+                                    <h3>{player.name}</h3>
+                                    <p>Cost: ${player.cost}</p>
+                                </div>
+                                <button 
+                                    onClick={() => removePlayer(player.name)}
+                                    className="remove-button"
+                                >
+                                    Remove
+                                </button>
                             </div>
                         ))}
                     </div>
@@ -332,8 +349,10 @@ const TeamBuilder = () => {
                                                 {player.name.charAt(0)}
                                             </div>
                                         )}
-                                        <h3>{player.name}</h3>
-                                        <p>Cost: ${player.cost}</p>
+                                        <div className="player-info">
+                                            <h3>{player.name}</h3>
+                                            <p>Cost: ${player.cost}</p>
+                                        </div>
                                         <button 
                                             onClick={() => selectPlayer(player)}
                                             disabled={budget < player.cost || selectedPlayers.length >= 5}
@@ -364,8 +383,10 @@ const TeamBuilder = () => {
                                                 {player.name.charAt(0)}
                                             </div>
                                         )}
-                                        <h3>{player.name}</h3>
-                                        <p>Cost: ${player.cost}</p>
+                                        <div className="player-info">
+                                            <h3>{player.name}</h3>
+                                            <p>Cost: ${player.cost}</p>
+                                        </div>
                                         <button 
                                             onClick={() => selectPlayer(player)}
                                             disabled={budget < player.cost || selectedPlayers.length >= 5}
@@ -396,8 +417,10 @@ const TeamBuilder = () => {
                                                 {player.name.charAt(0)}
                                             </div>
                                         )}
-                                        <h3>{player.name}</h3>
-                                        <p>Cost: ${player.cost}</p>
+                                        <div className="player-info">
+                                            <h3>{player.name}</h3>
+                                            <p>Cost: ${player.cost}</p>
+                                        </div>
                                         <button 
                                             onClick={() => selectPlayer(player)}
                                             disabled={budget < player.cost || selectedPlayers.length >= 5}
@@ -428,8 +451,10 @@ const TeamBuilder = () => {
                                                 {player.name.charAt(0)}
                                             </div>
                                         )}
-                                        <h3>{player.name}</h3>
-                                        <p>Cost: ${player.cost}</p>
+                                        <div className="player-info">
+                                            <h3>{player.name}</h3>
+                                            <p>Cost: ${player.cost}</p>
+                                        </div>
                                         <button 
                                             onClick={() => selectPlayer(player)}
                                             disabled={budget < player.cost || selectedPlayers.length >= 5}
