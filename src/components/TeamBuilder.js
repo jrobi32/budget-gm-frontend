@@ -103,30 +103,18 @@ const TeamBuilder = () => {
     const [playerPool, setPlayerPool] = useState({});
     const [selectedPlayers, setSelectedPlayers] = useState([]);
     const [playerOptions, setPlayerOptions] = useState({});
-    const [budget, setBudget] = useState(100);
+    const [budget, setBudget] = useState(10);
     const [record, setRecord] = useState(null);
-    const [playerName, setPlayerName] = useState('');
     const [error, setError] = useState('');
     const [isSimulated, setIsSimulated] = useState(false);
     const [imageErrors, setImageErrors] = useState({});
-    const [imageSources, setImageSources] = useState({});
-    const [dailyChallenge, setDailyChallenge] = useState(null);
-    const [isSubmitted, setIsSubmitted] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
-
-    const handleImageError = (playerName) => {
-        setImageErrors(prev => ({
-            ...prev,
-            [playerName]: true
-        }));
-    };
 
     useEffect(() => {
         const initializeApp = async () => {
             try {
                 setIsLoading(true);
                 await loadPlayerPool();
-                await fetchDailyChallenge();
             } catch (error) {
                 console.error('Error initializing app:', error);
                 setError('Failed to load application data. Please try again later.');
@@ -139,9 +127,7 @@ const TeamBuilder = () => {
 
     const loadPlayerPool = async () => {
         try {
-            console.log(`Fetching player pool from ${API_URL}/api/player_pool`);
             const response = await axios.get(`${API_URL}/api/player_pool`);
-            console.log('Player pool response:', response.data);
             if (!response.data || Object.keys(response.data).length === 0) {
                 throw new Error('Empty player pool received');
             }
@@ -151,26 +137,12 @@ const TeamBuilder = () => {
         } catch (error) {
             console.error('Error loading player pool:', error);
             setError(`Error loading player pool: ${error.message}`);
-            // Set empty player options to prevent rendering errors
             setPlayerOptions({
                 '$3': [],
                 '$2': [],
                 '$1': [],
                 '$0': []
             });
-        }
-    };
-
-    const fetchDailyChallenge = async () => {
-        try {
-            const today = new Date().toISOString().split('T')[0];
-            const response = await axios.get(`${API_URL}/api/challenge/${today}`);
-            if (response.data) {
-                setDailyChallenge(response.data);
-                setBudget(response.data.budget);
-            }
-        } catch (error) {
-            console.error('Error fetching daily challenge:', error);
         }
     };
 
@@ -205,6 +177,7 @@ const TeamBuilder = () => {
             setError('Team is already full');
             return;
         }
+        
         if (budget < player.cost) {
             setError('Not enough budget');
             return;
@@ -213,6 +186,7 @@ const TeamBuilder = () => {
         const newSelectedPlayers = [...selectedPlayers, player];
         setSelectedPlayers(newSelectedPlayers);
         setBudget(budget - player.cost);
+        updatePlayerOptions(playerPool);
         setError('');
     };
 
@@ -222,6 +196,7 @@ const TeamBuilder = () => {
             const newSelectedPlayers = selectedPlayers.filter(p => p.name !== playerName);
             setSelectedPlayers(newSelectedPlayers);
             setBudget(budget + player.cost);
+            updatePlayerOptions(playerPool);
         }
     };
 
@@ -232,13 +207,9 @@ const TeamBuilder = () => {
         }
 
         try {
-            const response = await axios.post(`${API_URL}/api/simulate_team`, {
+            const response = await axios.post(`${API_URL}/api/simulate`, {
                 players: selectedPlayers.map(p => p.name)
             });
-            
-            if (dailyChallenge) {
-                await submitDailyChallenge(response.data.record);
-            }
             
             setRecord(response.data);
             setIsSimulated(true);
@@ -249,50 +220,24 @@ const TeamBuilder = () => {
         }
     };
 
-    const submitDailyChallenge = async (teamRecord) => {
-        try {
-            const today = new Date().toISOString().split('T')[0];
-            const response = await axios.post(`${API_URL}/api/submit_team`, {
-                team: selectedPlayers.map(p => p.name),
-                date: today,
-                record: teamRecord
-            });
-
-            if (response.status === 200) {
-                setIsSubmitted(true);
-            }
-        } catch (error) {
-            console.error('Error submitting daily challenge:', error);
-        }
+    const handleImageError = (playerName) => {
+        setImageErrors(prev => ({
+            ...prev,
+            [playerName]: true
+        }));
     };
 
     return (
         <div className="team-builder">
             {isLoading ? (
-                <div className="loading-state">
-                    <p>Loading application...</p>
-                </div>
-            ) : error ? (
-                <div className="error-state">
-                    <p>{error}</p>
-                    <button onClick={() => window.location.reload()}>Retry</button>
-                </div>
+                <div className="loading">Loading...</div>
             ) : (
                 <>
-                    {dailyChallenge && (
-                        <div className="daily-challenge">
-                            <h2>Daily Challenge</h2>
-                            <p>{dailyChallenge.description}</p>
-                            {isSubmitted && (
-                                <div className="submission-success">
-                                    <p>Team submitted successfully! Check back tomorrow for a new challenge.</p>
-                                </div>
-                            )}
-                        </div>
-                    )}
-
                     <div className="team-section">
                         <h2>Selected Players</h2>
+                        <div className="budget-display">
+                            Remaining Budget: ${budget}
+                        </div>
                         <div className="selected-players">
                             {selectedPlayers.map((player, index) => (
                                 <div key={index} className="player-card">
@@ -322,21 +267,19 @@ const TeamBuilder = () => {
                             ))}
                         </div>
 
-                        <div className="simulation-section">
-                            {selectedPlayers.length === 5 && !isSubmitted && (
-                                <button 
-                                    className="simulate-button"
-                                    onClick={simulateTeam}
-                                >
-                                    Simulate Season
-                                </button>
-                            )}
-                            {record && (
-                                <div className="record-display">
-                                    <h3>Season Record: {record.record}</h3>
-                                </div>
-                            )}
-                        </div>
+                        {selectedPlayers.length === 5 && !isSimulated && (
+                            <button 
+                                className="simulate-button"
+                                onClick={simulateTeam}
+                            >
+                                Simulate Season
+                            </button>
+                        )}
+                        {record && (
+                            <div className="record-display">
+                                <h3>Season Record: {record.record}</h3>
+                            </div>
+                        )}
                     </div>
 
                     <div className="player-section">
@@ -378,6 +321,7 @@ const TeamBuilder = () => {
                     </div>
                 </>
             )}
+            {error && <div className="error-message">{error}</div>}
         </div>
     );
 };
