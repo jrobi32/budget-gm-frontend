@@ -23,8 +23,9 @@
 }
 
 .selected-players {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 15px;
     margin: 15px auto;
     width: 100%;
@@ -36,7 +37,7 @@
     border-radius: 8px;
     padding: 10px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    width: 100%;
+    width: 220px;
     text-align: center;
     display: flex;
     flex-direction: column;
@@ -80,8 +81,9 @@
 
 .player-options {
     width: 100%;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 15px;
     margin: 0 auto;
     padding: 0 20px;
@@ -92,7 +94,7 @@
     border-radius: 8px;
     padding: 10px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    width: 100%;
+    width: 220px;
     text-align: center;
     display: flex;
     flex-direction: column;
@@ -140,8 +142,9 @@
 }
 
 .player-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 15px;
     margin: 10px auto;
     width: 100%;
@@ -153,7 +156,7 @@
     border-radius: 8px;
     padding: 10px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    width: 100%;
+    width: 220px;
     text-align: center;
     display: flex;
     flex-direction: column;
