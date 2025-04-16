@@ -206,10 +206,16 @@ const TeamBuilder = () => {
             return;
         }
 
+        if (!props.nickname || props.nickname.trim() === '') {
+            setError('Please enter your nickname before simulating');
+            return;
+        }
+
         try {
             console.log('Simulating team with players:', selectedPlayers.map(p => p.name));
             const response = await axios.post(`${API_URL}/api/simulate`, {
-                players: selectedPlayers.map(p => p.name)
+                players: selectedPlayers.map(p => p.name),
+                player_name: props.nickname
             });
             
             console.log('Simulation response:', response.data);
