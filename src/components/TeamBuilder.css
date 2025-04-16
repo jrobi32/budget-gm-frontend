@@ -397,4 +397,52 @@ h2:after {
     .player-info p {
         font-size: 0.8em;
     }
+}
+
+.daily-challenge {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.daily-challenge h2 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.daily-challenge p {
+    color: #34495e;
+    font-size: 1.1em;
+    margin-bottom: 15px;
+}
+
+.submission-success {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 15px;
+    border-radius: 4px;
+    margin-top: 15px;
+}
+
+.simulate-button {
+    background-color: #34C759;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 12px 24px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.simulate-button:hover {
+    background-color: #2fb350;
+}
+
+.simulate-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
 } 
