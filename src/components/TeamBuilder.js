@@ -178,18 +178,18 @@ const TeamBuilder = () => {
                 <div className="budget-display">
                     Remaining Budget: ${budget}
                 </div>
-                <div className="selected-players">
-                    {selectedPlayers.map(player => (
-                        <div key={player.name} className="player-card">
-                            <h3>{player.name}</h3>
-                            <p>Cost: ${player.cost}</p>
-                            {!isSimulated && (
+                
+                {!isSimulated ? (
+                    <div className="selected-players">
+                        {selectedPlayers.map(player => (
+                            <div key={player.name} className="player-card">
+                                <h3>{player.name}</h3>
+                                <p>Cost: ${player.cost}</p>
                                 <button onClick={() => removePlayer(player.name)}>Remove</button>
-                            )}
-                        </div>
-                    ))}
-                </div>
-                {record && (
+                            </div>
+                        ))}
+                    </div>
+                ) : (
                     <div className="record-display">
                         <h3>Projected Record: {record.record}</h3>
                         <div className="player-stats">
