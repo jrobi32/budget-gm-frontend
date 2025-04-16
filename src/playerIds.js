@@ -23,5 +23,5 @@ export const playerIds = {
     'Bennedict Mathurin': '1631097',
     'Kyle Filipowski': '1641712',
     'Stephon Castle': '1641715',
-    'Dalton Knecht': '1641716'
+    'Dalton Knecht': '1631346'
 }; 
