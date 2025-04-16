@@ -5,9 +5,17 @@
     padding: 0;
 }
 
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
 .team-builder {
     width: 100%;
-    max-width: 1400px;
+    max-width: 100%;
     margin: 0 auto;
     padding: 10px;
 }
@@ -76,7 +84,7 @@
     display: inline-block;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     width: 100%;
-    max-width: 1400px;
+    max-width: 100%;
 }
 
 .player-options {
@@ -329,7 +337,7 @@ h2 {
     display: inline-block;
     padding-bottom: 5px;
     width: 100%;
-    max-width: 1400px;
+    max-width: 100%;
 }
 
 h2:after {
@@ -342,4 +350,51 @@ h2:after {
     height: 3px;
     background: linear-gradient(to right, #3498db, #2ecc71);
     border-radius: 3px;
+}
+
+/* Responsive styles for mobile devices */
+@media (max-width: 768px) {
+    .player-card, .player-option, .player-stat {
+        width: 100%;
+        max-width: 300px;
+    }
+    
+    .player-image, .player-image-placeholder {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .simulation-section {
+        flex-direction: column;
+    }
+    
+    .player-name-input {
+        width: 100%;
+        max-width: 300px;
+    }
+    
+    .simulate-button {
+        width: 100%;
+        max-width: 300px;
+    }
+}
+
+/* Responsive styles for very small screens */
+@media (max-width: 480px) {
+    .player-card, .player-option, .player-stat {
+        max-width: 100%;
+    }
+    
+    .player-image, .player-image-placeholder {
+        width: 70px;
+        height: 70px;
+    }
+    
+    .player-info h3 {
+        font-size: 0.9em;
+    }
+    
+    .player-info p {
+        font-size: 0.8em;
+    }
 } 
