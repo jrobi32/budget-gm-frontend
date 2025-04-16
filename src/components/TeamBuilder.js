@@ -207,16 +207,22 @@ const TeamBuilder = () => {
         }
 
         try {
+            console.log('Simulating team with players:', selectedPlayers.map(p => p.name));
             const response = await axios.post(`${API_URL}/api/simulate`, {
                 players: selectedPlayers.map(p => p.name)
             });
+            
+            console.log('Simulation response:', response.data);
+            if (!response.data || !response.data.wins || !response.data.losses) {
+                throw new Error('Invalid response from server');
+            }
             
             setRecord(response.data);
             setIsSimulated(true);
             setError('');
         } catch (error) {
             console.error('Error simulating team:', error);
-            setError(`Error simulating team: ${error.message}`);
+            setError(`Error simulating team: ${error.response?.data?.error || error.message}`);
         }
     };
 
