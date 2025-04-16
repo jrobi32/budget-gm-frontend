@@ -113,6 +113,13 @@ const TeamBuilder = () => {
     const [dailyChallenge, setDailyChallenge] = useState(null);
     const [isSubmitted, setIsSubmitted] = useState(false);
 
+    const handleImageError = (playerName) => {
+        setImageErrors(prev => ({
+            ...prev,
+            [playerName]: true
+        }));
+    };
+
     useEffect(() => {
         loadPlayerPool();
         fetchDailyChallenge();
