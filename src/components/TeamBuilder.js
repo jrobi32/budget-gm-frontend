@@ -8,7 +8,7 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 const TeamBuilder = () => {
     const [playerPool, setPlayerPool] = useState({});
     const [selectedPlayers, setSelectedPlayers] = useState([]);
-    const [playerOptions, setPlayerOptions] = useState([]);
+    const [playerOptions, setPlayerOptions] = useState({});
     const [budget, setBudget] = useState(10);
     const [record, setRecord] = useState(null);
     const [playerName, setPlayerName] = useState('');
@@ -44,7 +44,8 @@ const TeamBuilder = () => {
         const selectedPlayerNames = selectedPlayers.map(p => p.name);
         console.log('Selected player names:', selectedPlayerNames);
         
-        const options = [];
+        // Create a new object to store filtered players by category
+        const filteredOptions = {};
         
         // Process each cost category
         ['$3', '$2', '$1', '$0'].forEach(category => {
@@ -57,17 +58,17 @@ const TeamBuilder = () => {
                 console.log(`Category ${category}: ${availablePlayers.length} available players`);
                 
                 // Add available players to options with their cost
-                availablePlayers.forEach(player => {
-                    options.push({
-                        ...player,
-                        cost: parseInt(category.replace('$', ''))
-                    });
-                });
+                filteredOptions[category] = availablePlayers.map(player => ({
+                    ...player,
+                    cost: parseInt(category.replace('$', ''))
+                }));
+            } else {
+                filteredOptions[category] = [];
             }
         });
         
-        console.log('Final player options:', options);
-        setPlayerOptions(options);
+        console.log('Final player options:', filteredOptions);
+        setPlayerOptions(filteredOptions);
     };
 
     const selectPlayer = (player) => {
@@ -211,19 +212,81 @@ const TeamBuilder = () => {
                 <>
                     <div className="player-section">
                         <h2>Available Players</h2>
-                        <div className="player-options">
-                            {playerOptions.map(player => (
-                                <div key={player.name} className="player-card">
-                                    <h3>{player.name}</h3>
-                                    <p>Cost: ${player.cost}</p>
-                                    <button 
-                                        onClick={() => selectPlayer(player)}
-                                        disabled={budget < player.cost || selectedPlayers.length >= 5}
-                                    >
-                                        Select
-                                    </button>
-                                </div>
-                            ))}
+                        
+                        {/* $3 Players */}
+                        <div className="player-category">
+                            <div className="category-header">$3 Players</div>
+                            <div className="player-options">
+                                {playerOptions['$3'] && playerOptions['$3'].map(player => (
+                                    <div key={player.name} className="player-option">
+                                        <h3>{player.name}</h3>
+                                        <p>Cost: ${player.cost}</p>
+                                        <button 
+                                            onClick={() => selectPlayer(player)}
+                                            disabled={budget < player.cost || selectedPlayers.length >= 5}
+                                        >
+                                            Select
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        
+                        {/* $2 Players */}
+                        <div className="player-category">
+                            <div className="category-header">$2 Players</div>
+                            <div className="player-options">
+                                {playerOptions['$2'] && playerOptions['$2'].map(player => (
+                                    <div key={player.name} className="player-option">
+                                        <h3>{player.name}</h3>
+                                        <p>Cost: ${player.cost}</p>
+                                        <button 
+                                            onClick={() => selectPlayer(player)}
+                                            disabled={budget < player.cost || selectedPlayers.length >= 5}
+                                        >
+                                            Select
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        
+                        {/* $1 Players */}
+                        <div className="player-category">
+                            <div className="category-header">$1 Players</div>
+                            <div className="player-options">
+                                {playerOptions['$1'] && playerOptions['$1'].map(player => (
+                                    <div key={player.name} className="player-option">
+                                        <h3>{player.name}</h3>
+                                        <p>Cost: ${player.cost}</p>
+                                        <button 
+                                            onClick={() => selectPlayer(player)}
+                                            disabled={budget < player.cost || selectedPlayers.length >= 5}
+                                        >
+                                            Select
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        
+                        {/* $0 Players */}
+                        <div className="player-category">
+                            <div className="category-header">$0 Players</div>
+                            <div className="player-options">
+                                {playerOptions['$0'] && playerOptions['$0'].map(player => (
+                                    <div key={player.name} className="player-option">
+                                        <h3>{player.name}</h3>
+                                        <p>Cost: ${player.cost}</p>
+                                        <button 
+                                            onClick={() => selectPlayer(player)}
+                                            disabled={budget < player.cost || selectedPlayers.length >= 5}
+                                        >
+                                            Select
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
 
