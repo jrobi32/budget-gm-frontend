@@ -24,9 +24,17 @@ const getPlayerImageUrl = (playerName) => {
     ];
     
     if (nbaPlayers.includes(playerName)) {
-        // Use a more reliable NBA player image service
-        const formattedName = playerName.replace(/\s+/g, '').replace(/\./g, '').replace(/'/g, '');
-        return `https://cdn.nba.com/headshots/nba/latest/1040x760/${formattedName}.png`;
+        // Use a more reliable approach for NBA player images
+        // Create a player ID based on the name
+        const playerId = playerName
+            .toLowerCase()
+            .replace(/\s+/g, '-')
+            .replace(/\./g, '')
+            .replace(/'/g, '')
+            .replace(/"/g, '');
+            
+        // Use a reliable NBA player image service
+        return `https://a.espncdn.com/combiner/i?img=/i/headshots/nba/players/full/${playerId}.png&w=350&h=254`;
     } else if (fictionalPlayers.includes(playerName)) {
         // Use placeholder images for fictional players
         if (playerName === 'Joe Rogan') {
@@ -56,6 +64,7 @@ const TeamBuilder = () => {
     const [error, setError] = useState('');
     const [isSimulated, setIsSimulated] = useState(false);
     const [imageErrors, setImageErrors] = useState({});
+    const [imageSources, setImageSources] = useState({});
 
     const loadPlayerPool = async () => {
         try {
@@ -213,11 +222,73 @@ const TeamBuilder = () => {
         }
     };
 
-    const handleImageError = (playerName) => {
-        setImageErrors(prev => ({
+    const getPlayerImageSources = (playerName) => {
+        if (imageSources[playerName]) {
+            return imageSources[playerName];
+        }
+
+        const sources = [];
+        
+        // For NBA players, try multiple sources
+        const nbaPlayers = [
+            'Kevin Durant', 'LeBron James', 'Stephen Curry', 'Giannis Antetokounmpo', 
+            'Luka Doncic', 'Joel Embiid', 'Jayson Tatum', 'Devin Booker', 
+            'Anthony Edwards', 'Karl-Anthony Towns', 'Cade Cunningham', 'Naz Reid',
+            'Josh Giddey', 'Scottie Barnes', 'Stephon Castle', 'Jaren Jackson Jr.',
+            'Donte DiVincenzo', 'Andrew Nembhard', 'Duncan Robinson', 'Royce O\'Neale',
+            'Dalton Knecht', 'De\'Aaron Fox', 'Bennedict Mathurin', 'Kyle Filipowski'
+        ];
+        
+        if (nbaPlayers.includes(playerName)) {
+            // Create a player ID based on the name
+            const playerId = playerName
+                .toLowerCase()
+                .replace(/\s+/g, '-')
+                .replace(/\./g, '')
+                .replace(/'/g, '')
+                .replace(/"/g, '');
+                
+            // Try ESPN first
+            sources.push(`https://a.espncdn.com/combiner/i?img=/i/headshots/nba/players/full/${playerId}.png&w=350&h=254`);
+            
+            // Try NBA.com as fallback
+            const nbaId = playerName.replace(/\s+/g, '').replace(/\./g, '').replace(/'/g, '');
+            sources.push(`https://cdn.nba.com/headshots/nba/latest/1040x760/${nbaId}.png`);
+            
+            // Try Basketball Reference as another fallback
+            sources.push(`https://www.basketball-reference.com/req/202106291/images/players/${playerId}.jpg`);
+        } else {
+            // For fictional players, use placeholder images
+            sources.push(getPlayerImageUrl(playerName));
+        }
+        
+        // Store the sources for this player
+        setImageSources(prev => ({
             ...prev,
-            [playerName]: true
+            [playerName]: sources
         }));
+        
+        return sources;
+    };
+
+    const handleImageError = (playerName) => {
+        const sources = getPlayerImageSources(playerName);
+        const currentIndex = imageSources[playerName] ? imageSources[playerName].indexOf(imageErrors[playerName] || '') : 0;
+        
+        // If we have more sources to try
+        if (currentIndex < sources.length - 1) {
+            // Try the next source
+            setImageErrors(prev => ({
+                ...prev,
+                [playerName]: sources[currentIndex + 1]
+            }));
+        } else {
+            // All sources failed, show placeholder
+            setImageErrors(prev => ({
+                ...prev,
+                [playerName]: 'placeholder'
+            }));
+        }
     };
 
     return (
@@ -232,9 +303,9 @@ const TeamBuilder = () => {
                     <div className="selected-players">
                         {selectedPlayers.map(player => (
                             <div key={player.name} className="player-card">
-                                {!imageErrors[player.name] ? (
+                                {imageErrors[player.name] !== 'placeholder' ? (
                                     <img 
-                                        src={getPlayerImageUrl(player.name)} 
+                                        src={imageErrors[player.name] || getPlayerImageSources(player.name)[0]} 
                                         alt={player.name} 
                                         className="player-image"
                                         onError={() => handleImageError(player.name)}
@@ -256,9 +327,9 @@ const TeamBuilder = () => {
                         <div className="player-stats">
                             {selectedPlayers.map(player => (
                                 <div key={player.name} className="player-stat">
-                                    {!imageErrors[player.name] ? (
+                                    {imageErrors[player.name] !== 'placeholder' ? (
                                         <img 
-                                            src={getPlayerImageUrl(player.name)} 
+                                            src={imageErrors[player.name] || getPlayerImageSources(player.name)[0]} 
                                             alt={player.name} 
                                             className="player-image"
                                             onError={() => handleImageError(player.name)}
@@ -292,9 +363,9 @@ const TeamBuilder = () => {
                             <div className="player-options">
                                 {playerOptions['$3'] && playerOptions['$3'].map(player => (
                                     <div key={player.name} className="player-option">
-                                        {!imageErrors[player.name] ? (
+                                        {imageErrors[player.name] !== 'placeholder' ? (
                                             <img 
-                                                src={getPlayerImageUrl(player.name)} 
+                                                src={imageErrors[player.name] || getPlayerImageSources(player.name)[0]} 
                                                 alt={player.name} 
                                                 className="player-image"
                                                 onError={() => handleImageError(player.name)}
@@ -323,9 +394,9 @@ const TeamBuilder = () => {
                             <div className="player-options">
                                 {playerOptions['$2'] && playerOptions['$2'].map(player => (
                                     <div key={player.name} className="player-option">
-                                        {!imageErrors[player.name] ? (
+                                        {imageErrors[player.name] !== 'placeholder' ? (
                                             <img 
-                                                src={getPlayerImageUrl(player.name)} 
+                                                src={imageErrors[player.name] || getPlayerImageSources(player.name)[0]} 
                                                 alt={player.name} 
                                                 className="player-image"
                                                 onError={() => handleImageError(player.name)}
@@ -354,9 +425,9 @@ const TeamBuilder = () => {
                             <div className="player-options">
                                 {playerOptions['$1'] && playerOptions['$1'].map(player => (
                                     <div key={player.name} className="player-option">
-                                        {!imageErrors[player.name] ? (
+                                        {imageErrors[player.name] !== 'placeholder' ? (
                                             <img 
-                                                src={getPlayerImageUrl(player.name)} 
+                                                src={imageErrors[player.name] || getPlayerImageSources(player.name)[0]} 
                                                 alt={player.name} 
                                                 className="player-image"
                                                 onError={() => handleImageError(player.name)}
@@ -385,9 +456,9 @@ const TeamBuilder = () => {
                             <div className="player-options">
                                 {playerOptions['$0'] && playerOptions['$0'].map(player => (
                                     <div key={player.name} className="player-option">
-                                        {!imageErrors[player.name] ? (
+                                        {imageErrors[player.name] !== 'placeholder' ? (
                                             <img 
-                                                src={getPlayerImageUrl(player.name)} 
+                                                src={imageErrors[player.name] || getPlayerImageSources(player.name)[0]} 
                                                 alt={player.name} 
                                                 className="player-image"
                                                 onError={() => handleImageError(player.name)}
