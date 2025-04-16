@@ -136,12 +136,17 @@ const TeamBuilder = ({ onError, nickname }) => {
     };
 
     const removePlayer = (playerName) => {
+        if (isSimulated) {
+            setError('Cannot remove players after simulation');
+            return;
+        }
+        
         const player = selectedPlayers.find(p => p.name === playerName);
         if (player) {
             const newSelectedPlayers = selectedPlayers.filter(p => p.name !== playerName);
             setSelectedPlayers(newSelectedPlayers);
             setBudget(budget + player.cost);
-            updatePlayerOptions(playerPool, newSelectedPlayers);  // Pass the updated selected players
+            updatePlayerOptions(playerPool, newSelectedPlayers);
         }
     };
 
@@ -190,12 +195,12 @@ const TeamBuilder = ({ onError, nickname }) => {
                 <div className="loading">Loading...</div>
             ) : (
                 <>
-            <div className="team-section">
+                    <div className="team-section">
                         <h2>Selected Players</h2>
-                <div className="budget-display">
-                    Remaining Budget: ${budget}
-                </div>
-                <div className="selected-players">
+                        <div className="budget-display">
+                            Remaining Budget: ${budget}
+                        </div>
+                        <div className="selected-players">
                             {selectedPlayers.map((player, index) => (
                                 <div key={index} className="player-card">
                                     {!imageErrors[player.name] ? (
@@ -211,12 +216,13 @@ const TeamBuilder = ({ onError, nickname }) => {
                                         </div>
                                     )}
                                     <div className="player-info">
-                            <h3>{player.name}</h3>
-                            <p>Cost: ${player.cost}</p>
-                        </div>
+                                        <h3>{player.name}</h3>
+                                        <p>Cost: ${player.cost}</p>
+                                    </div>
                                     <button 
                                         onClick={() => removePlayer(player.name)}
                                         className="remove-button"
+                                        disabled={isSimulated}
                                     >
                                         Remove
                                     </button>
@@ -241,14 +247,14 @@ const TeamBuilder = ({ onError, nickname }) => {
                                 <p>Win Probability: {(record.win_probability * 100).toFixed(1)}%</p>
                             </div>
                         )}
-            </div>
+                    </div>
 
-            <div className="player-section">
-                <h2>Available Players</h2>
+                    <div className="player-section">
+                        <h2>Available Players</h2>
                         {Object.entries(playerOptions).map(([category, players]) => (
                             <div key={category} className="player-category">
                                 <div className="category-header">{category} Players</div>
-                <div className="player-options">
+                                <div className="player-options">
                                     {players.map((player, index) => (
                                         <div key={index} className="player-option">
                                             {!imageErrors[player.name] ? (
@@ -264,20 +270,20 @@ const TeamBuilder = ({ onError, nickname }) => {
                                                 </div>
                                             )}
                                             <div className="player-info">
-                            <h3>{player.name}</h3>
-                            <p>Cost: ${player.cost}</p>
+                                                <h3>{player.name}</h3>
+                                                <p>Cost: ${player.cost}</p>
                                             </div>
-                            <button 
-                                onClick={() => selectPlayer(player)}
-                                disabled={budget < player.cost || selectedPlayers.length >= 5}
+                                            <button 
+                                                onClick={() => selectPlayer(player)}
+                                                disabled={budget < player.cost || selectedPlayers.length >= 5 || isSimulated}
                                                 className="select-button"
-                            >
-                                Select
-                            </button>
-                        </div>
-                    ))}
-                </div>
-            </div>
+                                            >
+                                                Select
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         ))}
                     </div>
                 </>
