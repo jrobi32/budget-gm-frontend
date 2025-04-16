@@ -15,7 +15,7 @@ const getPlayerImageUrl = (playerName) => {
         'Anthony Edwards', 'Karl-Anthony Towns', 'Cade Cunningham', 'Naz Reid',
         'Josh Giddey', 'Scottie Barnes', 'Stephon Castle', 'Jaren Jackson Jr.',
         'Donte DiVincenzo', 'Andrew Nembhard', 'Duncan Robinson', 'Royce O\'Neale',
-        'Dalton Knecht'
+        'Dalton Knecht', 'De\'Aaron Fox', 'Bennedict Mathurin', 'Kyle Filipowski'
     ];
     
     const fictionalPlayers = [
@@ -24,25 +24,26 @@ const getPlayerImageUrl = (playerName) => {
     ];
     
     if (nbaPlayers.includes(playerName)) {
-        // Use a placeholder NBA player image service
-        return `https://ak-static.cms.nba.com/wp-content/uploads/headshots/nba/latest/1040x760/${playerName.replace(/\s+/g, '').toLowerCase()}.png`;
+        // Use a more reliable NBA player image service
+        const formattedName = playerName.replace(/\s+/g, '').replace(/\./g, '').replace(/'/g, '');
+        return `https://cdn.nba.com/headshots/nba/latest/1040x760/${formattedName}.png`;
     } else if (fictionalPlayers.includes(playerName)) {
-        // Use a fun placeholder for fictional players
+        // Use placeholder images for fictional players
         if (playerName === 'Joe Rogan') {
-            return 'https://i.imgur.com/example1.jpg'; // Replace with actual image URL
+            return 'https://i.imgur.com/placeholder1.jpg';
         } else if (playerName === 'Logan Paul') {
-            return 'https://i.imgur.com/example2.jpg'; // Replace with actual image URL
+            return 'https://i.imgur.com/placeholder2.jpg';
         } else if (playerName === 'Super Mario') {
-            return 'https://i.imgur.com/example3.jpg'; // Replace with actual image URL
+            return 'https://i.imgur.com/placeholder3.jpg';
         } else if (playerName === 'Dwayne "The Rock" Johnson') {
-            return 'https://i.imgur.com/example4.jpg'; // Replace with actual image URL
+            return 'https://i.imgur.com/placeholder4.jpg';
         } else if (playerName === 'Air Bud') {
-            return 'https://i.imgur.com/example5.jpg'; // Replace with actual image URL
+            return 'https://i.imgur.com/placeholder5.jpg';
         }
     }
     
     // Default image if no match
-    return 'https://via.placeholder.com/80';
+    return 'https://via.placeholder.com/80?text=' + encodeURIComponent(playerName);
 };
 
 const TeamBuilder = () => {
@@ -54,6 +55,7 @@ const TeamBuilder = () => {
     const [playerName, setPlayerName] = useState('');
     const [error, setError] = useState('');
     const [isSimulated, setIsSimulated] = useState(false);
+    const [imageErrors, setImageErrors] = useState({});
 
     const loadPlayerPool = async () => {
         try {
@@ -211,6 +213,13 @@ const TeamBuilder = () => {
         }
     };
 
+    const handleImageError = (playerName) => {
+        setImageErrors(prev => ({
+            ...prev,
+            [playerName]: true
+        }));
+    };
+
     return (
         <div className="team-builder">
             <div className="team-section">
@@ -223,15 +232,18 @@ const TeamBuilder = () => {
                     <div className="selected-players">
                         {selectedPlayers.map(player => (
                             <div key={player.name} className="player-card">
-                                <img 
-                                    src={getPlayerImageUrl(player.name)} 
-                                    alt={player.name} 
-                                    className="player-image"
-                                    onError={(e) => {
-                                        e.target.onerror = null;
-                                        e.target.src = 'https://via.placeholder.com/80';
-                                    }}
-                                />
+                                {!imageErrors[player.name] ? (
+                                    <img 
+                                        src={getPlayerImageUrl(player.name)} 
+                                        alt={player.name} 
+                                        className="player-image"
+                                        onError={() => handleImageError(player.name)}
+                                    />
+                                ) : (
+                                    <div className="player-image-placeholder">
+                                        {player.name.charAt(0)}
+                                    </div>
+                                )}
                                 <h3>{player.name}</h3>
                                 <p>Cost: ${player.cost}</p>
                                 <button onClick={() => removePlayer(player.name)}>Remove</button>
@@ -244,15 +256,18 @@ const TeamBuilder = () => {
                         <div className="player-stats">
                             {selectedPlayers.map(player => (
                                 <div key={player.name} className="player-stat">
-                                    <img 
-                                        src={getPlayerImageUrl(player.name)} 
-                                        alt={player.name} 
-                                        className="player-image"
-                                        onError={(e) => {
-                                            e.target.onerror = null;
-                                            e.target.src = 'https://via.placeholder.com/80';
-                                        }}
-                                    />
+                                    {!imageErrors[player.name] ? (
+                                        <img 
+                                            src={getPlayerImageUrl(player.name)} 
+                                            alt={player.name} 
+                                            className="player-image"
+                                            onError={() => handleImageError(player.name)}
+                                        />
+                                    ) : (
+                                        <div className="player-image-placeholder">
+                                            {player.name.charAt(0)}
+                                        </div>
+                                    )}
                                     <h4>{player.name}</h4>
                                     <p>PPG: {record.player_stats[player.name].ppg.toFixed(1)}</p>
                                     <p>RPG: {record.player_stats[player.name].rpg.toFixed(1)}</p>
@@ -277,15 +292,18 @@ const TeamBuilder = () => {
                             <div className="player-options">
                                 {playerOptions['$3'] && playerOptions['$3'].map(player => (
                                     <div key={player.name} className="player-option">
-                                        <img 
-                                            src={getPlayerImageUrl(player.name)} 
-                                            alt={player.name} 
-                                            className="player-image"
-                                            onError={(e) => {
-                                                e.target.onerror = null;
-                                                e.target.src = 'https://via.placeholder.com/80';
-                                            }}
-                                        />
+                                        {!imageErrors[player.name] ? (
+                                            <img 
+                                                src={getPlayerImageUrl(player.name)} 
+                                                alt={player.name} 
+                                                className="player-image"
+                                                onError={() => handleImageError(player.name)}
+                                            />
+                                        ) : (
+                                            <div className="player-image-placeholder">
+                                                {player.name.charAt(0)}
+                                            </div>
+                                        )}
                                         <h3>{player.name}</h3>
                                         <p>Cost: ${player.cost}</p>
                                         <button 
@@ -305,15 +323,18 @@ const TeamBuilder = () => {
                             <div className="player-options">
                                 {playerOptions['$2'] && playerOptions['$2'].map(player => (
                                     <div key={player.name} className="player-option">
-                                        <img 
-                                            src={getPlayerImageUrl(player.name)} 
-                                            alt={player.name} 
-                                            className="player-image"
-                                            onError={(e) => {
-                                                e.target.onerror = null;
-                                                e.target.src = 'https://via.placeholder.com/80';
-                                            }}
-                                        />
+                                        {!imageErrors[player.name] ? (
+                                            <img 
+                                                src={getPlayerImageUrl(player.name)} 
+                                                alt={player.name} 
+                                                className="player-image"
+                                                onError={() => handleImageError(player.name)}
+                                            />
+                                        ) : (
+                                            <div className="player-image-placeholder">
+                                                {player.name.charAt(0)}
+                                            </div>
+                                        )}
                                         <h3>{player.name}</h3>
                                         <p>Cost: ${player.cost}</p>
                                         <button 
@@ -333,15 +354,18 @@ const TeamBuilder = () => {
                             <div className="player-options">
                                 {playerOptions['$1'] && playerOptions['$1'].map(player => (
                                     <div key={player.name} className="player-option">
-                                        <img 
-                                            src={getPlayerImageUrl(player.name)} 
-                                            alt={player.name} 
-                                            className="player-image"
-                                            onError={(e) => {
-                                                e.target.onerror = null;
-                                                e.target.src = 'https://via.placeholder.com/80';
-                                            }}
-                                        />
+                                        {!imageErrors[player.name] ? (
+                                            <img 
+                                                src={getPlayerImageUrl(player.name)} 
+                                                alt={player.name} 
+                                                className="player-image"
+                                                onError={() => handleImageError(player.name)}
+                                            />
+                                        ) : (
+                                            <div className="player-image-placeholder">
+                                                {player.name.charAt(0)}
+                                            </div>
+                                        )}
                                         <h3>{player.name}</h3>
                                         <p>Cost: ${player.cost}</p>
                                         <button 
@@ -361,15 +385,18 @@ const TeamBuilder = () => {
                             <div className="player-options">
                                 {playerOptions['$0'] && playerOptions['$0'].map(player => (
                                     <div key={player.name} className="player-option">
-                                        <img 
-                                            src={getPlayerImageUrl(player.name)} 
-                                            alt={player.name} 
-                                            className="player-image"
-                                            onError={(e) => {
-                                                e.target.onerror = null;
-                                                e.target.src = 'https://via.placeholder.com/80';
-                                            }}
-                                        />
+                                        {!imageErrors[player.name] ? (
+                                            <img 
+                                                src={getPlayerImageUrl(player.name)} 
+                                                alt={player.name} 
+                                                className="player-image"
+                                                onError={() => handleImageError(player.name)}
+                                            />
+                                        ) : (
+                                            <div className="player-image-placeholder">
+                                                {player.name.charAt(0)}
+                                            </div>
+                                        )}
                                         <h3>{player.name}</h3>
                                         <p>Cost: ${player.cost}</p>
                                         <button 
