@@ -82,14 +82,17 @@ const TeamBuilder = () => {
         }
 
         try {
+            console.log(`Simulating team with players: ${selectedPlayers.map(p => p.name).join(', ')}`);
             const response = await axios.post(`${API_URL}/api/simulate`, {
                 players: selectedPlayers.map(p => p.name),
-                player_name: playerName
+                playerName: playerName
             });
+            console.log('Simulation response:', response.data);
             setRecord(response.data);
             setError('');
         } catch (error) {
-            setError('Error simulating team');
+            console.error('Error simulating team:', error);
+            setError(`Error simulating team: ${error.message}`);
         }
     };
 
@@ -111,19 +114,8 @@ const TeamBuilder = () => {
                 </div>
                 {record && (
                     <div className="record-display">
-                        <h3>Projected Record: {record.wins}-{record.losses}</h3>
-                        <div className="player-stats">
-                            {selectedPlayers.map(player => (
-                                <div key={player.name} className="player-stat">
-                                    <h4>{player.name}</h4>
-                                    <p>PPG: {record.player_stats[player.name].ppg.toFixed(1)}</p>
-                                    <p>RPG: {record.player_stats[player.name].rpg.toFixed(1)}</p>
-                                    <p>APG: {record.player_stats[player.name].apg.toFixed(1)}</p>
-                                    <p>SPG: {record.player_stats[player.name].spg.toFixed(1)}</p>
-                                    <p>BPG: {record.player_stats[player.name].bpg.toFixed(1)}</p>
-                                </div>
-                            ))}
-                        </div>
+                        <h3>Projected Record: {record.record}</h3>
+                        <p>Win Probability: {(record.win_probability * 100).toFixed(1)}%</p>
                     </div>
                 )}
             </div>
