@@ -88,7 +88,47 @@ const TeamBuilder = () => {
                 playerName: playerName
             });
             console.log('Simulation response:', response.data);
-            setRecord(response.data);
+            
+            // Generate hypothetical player stats based on cost
+            const playerStats = {};
+            selectedPlayers.forEach(player => {
+                // Base stats vary by cost tier
+                let baseStats = {
+                    ppg: 0,
+                    rpg: 0,
+                    apg: 0,
+                    spg: 0,
+                    bpg: 0
+                };
+                
+                // Set base stats based on cost tier
+                if (player.cost === 3) {
+                    baseStats = { ppg: 25, rpg: 7, apg: 5, spg: 1.5, bpg: 0.5 };
+                } else if (player.cost === 2) {
+                    baseStats = { ppg: 18, rpg: 5, apg: 4, spg: 1, bpg: 0.3 };
+                } else if (player.cost === 1) {
+                    baseStats = { ppg: 12, rpg: 4, apg: 3, spg: 0.8, bpg: 0.2 };
+                } else {
+                    baseStats = { ppg: 8, rpg: 3, apg: 2, spg: 0.5, bpg: 0.1 };
+                }
+                
+                // Add some randomness (±10%)
+                playerStats[player.name] = {
+                    ppg: baseStats.ppg * (0.9 + Math.random() * 0.2),
+                    rpg: baseStats.rpg * (0.9 + Math.random() * 0.2),
+                    apg: baseStats.apg * (0.9 + Math.random() * 0.2),
+                    spg: baseStats.spg * (0.9 + Math.random() * 0.2),
+                    bpg: baseStats.bpg * (0.9 + Math.random() * 0.2)
+                };
+            });
+            
+            // Add player stats to the response
+            const recordWithStats = {
+                ...response.data,
+                player_stats: playerStats
+            };
+            
+            setRecord(recordWithStats);
             setError('');
         } catch (error) {
             console.error('Error simulating team:', error);
@@ -115,7 +155,18 @@ const TeamBuilder = () => {
                 {record && (
                     <div className="record-display">
                         <h3>Projected Record: {record.record}</h3>
-                        <p>Win Probability: {(record.win_probability * 100).toFixed(1)}%</p>
+                        <div className="player-stats">
+                            {selectedPlayers.map(player => (
+                                <div key={player.name} className="player-stat">
+                                    <h4>{player.name}</h4>
+                                    <p>PPG: {record.player_stats[player.name].ppg.toFixed(1)}</p>
+                                    <p>RPG: {record.player_stats[player.name].rpg.toFixed(1)}</p>
+                                    <p>APG: {record.player_stats[player.name].apg.toFixed(1)}</p>
+                                    <p>SPG: {record.player_stats[player.name].spg.toFixed(1)}</p>
+                                    <p>BPG: {record.player_stats[player.name].bpg.toFixed(1)}</p>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 )}
             </div>
