@@ -280,12 +280,15 @@ const TeamBuilder = ({ onError, nickname }) => {
                         </div>
 
                         {selectedPlayers.length === 5 && !isSimulated && (
-                            <button 
-                                className="simulate-button"
-                                onClick={simulateTeam}
-                            >
-                                Simulate Season
-                            </button>
+                            <div className="simulation-section">
+                                <button 
+                                    className="simulate-button"
+                                    onClick={simulateTeam}
+                                >
+                                    Simulate Season
+                                </button>
+                                {error && <div className="error-message">{error}</div>}
+                            </div>
                         )}
                         {record && (
                             <div className="record-display">

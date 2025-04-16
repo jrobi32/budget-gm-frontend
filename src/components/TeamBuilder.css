@@ -294,8 +294,10 @@ html, body {
 
 .error-message {
     color: #dc3545;
-    text-align: center;
-    margin: 10px 0;
+    font-size: 1.1em;
+    font-weight: 500;
+    margin: 0;
+    padding: 0 20px;
 }
 
 .budget-display {
