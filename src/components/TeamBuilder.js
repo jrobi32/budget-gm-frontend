@@ -16,11 +16,14 @@ const TeamBuilder = () => {
 
     const loadPlayerPool = async () => {
         try {
-            const response = await axios.get(`${API_URL}/api/player-pool`);
+            console.log(`Fetching player pool from ${API_URL}/api/player_pool`);
+            const response = await axios.get(`${API_URL}/api/player_pool`);
+            console.log('Player pool response:', response.data);
             setPlayerPool(response.data);
             updatePlayerOptions(response.data);
         } catch (error) {
-            setError('Error loading player pool');
+            console.error('Error loading player pool:', error);
+            setError(`Error loading player pool: ${error.message}`);
         }
     };
 
