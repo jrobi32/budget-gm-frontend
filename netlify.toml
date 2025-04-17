@@ -1,13 +1,8 @@
 [build]
-  command = "npm run build && cd api && npm install && npm run build"
+  command = "npm run build"
   publish = "build"
-  functions = "api/dist"
-
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/api/:splat"
-  status = 200
 
 [build.environment]
   NODE_VERSION = "18"
-  NPM_VERSION = "9" 
+  NPM_VERSION = "9"
+  REACT_APP_API_URL = "https://budget-gm-backend.onrender.com" 

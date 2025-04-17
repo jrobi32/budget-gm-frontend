@@ -4,7 +4,7 @@ import './TeamBuilder.css';
 import { playerIds } from '../playerIds';
 
 // Get API URL from environment variable or use default
-const API_URL = process.env.REACT_APP_API_URL || 'https://budget-gm-backend.onrender.com/api';
+const API_URL = process.env.REACT_APP_API_URL;
 
 // Function to get player image URL
 const getPlayerImageUrl = (playerName) => {
@@ -72,22 +72,36 @@ const TeamBuilder = ({ onError, nickname }) => {
 
     const loadPlayerPool = async () => {
         try {
-            const response = await axios.get(`${API_URL}/api/player_pool`);
+            console.log('Loading player pool from:', API_URL);
+            const response = await axios.get(`${API_URL}/player_pool`);
+            console.log('Player pool response:', response.data);
+            
             if (!response.data || Object.keys(response.data).length === 0) {
                 throw new Error('Empty player pool received');
             }
+            
+            // Validate the response structure
+            const requiredCategories = ['$3', '$2', '$1', '$0'];
+            for (const category of requiredCategories) {
+                if (!response.data[category] || !Array.isArray(response.data[category])) {
+                    throw new Error(`Invalid player pool structure: missing or invalid ${category} category`);
+                }
+            }
+            
             setPlayerPool(response.data);
             updatePlayerOptions(response.data, []);  // Pass empty selected players initially
             setError('');
         } catch (error) {
             console.error('Error loading player pool:', error);
-            setError(`Error loading player pool: ${error.message}`);
+            const errorMessage = error.response?.data?.error || error.message;
+            setError(`Error loading player pool: ${errorMessage}`);
             setPlayerOptions({
                 '$3': [],
                 '$2': [],
                 '$1': [],
                 '$0': []
             });
+            throw error; // Re-throw to be caught by initializeApp
         }
     };
 
@@ -163,14 +177,23 @@ const TeamBuilder = ({ onError, nickname }) => {
 
         try {
             console.log('Simulating team with players:', selectedPlayers.map(p => p.name));
-            const response = await axios.post(`${API_URL}/api/simulate`, {
+            const response = await axios.post(`${API_URL}/simulate`, {
                 players: selectedPlayers.map(p => p.name),
                 player_name: nickname.trim()
             });
             
             console.log('Simulation response:', response.data);
-            if (!response.data || !response.data.wins || !response.data.losses) {
+            
+            // Validate the response structure
+            if (!response.data || typeof response.data !== 'object') {
                 throw new Error('Invalid response from server');
+            }
+            
+            const requiredFields = ['wins', 'losses', 'win_probability', 'team_stats'];
+            for (const field of requiredFields) {
+                if (!(field in response.data)) {
+                    throw new Error(`Missing required field in response: ${field}`);
+                }
             }
             
             setRecord(response.data);
