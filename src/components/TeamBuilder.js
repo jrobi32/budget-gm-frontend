@@ -79,23 +79,8 @@ const TeamBuilder = ({ onError, nickname }) => {
                 REACT_APP_API_URL: process.env.REACT_APP_API_URL
             });
 
-            // Create axios instance with default config
-            const api = axios.create({
-                baseURL: API_URL,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                withCredentials: false
-            });
-
             console.log('Making request to:', `${API_URL}/api/player_pool`);
-            const response = await api.get('/api/player_pool', {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                }
-            });
+            const response = await axios.get(`${API_URL}/api/player_pool`);
             console.log('Player pool response:', response.data);
             
             if (!response.data || Object.keys(response.data).length === 0) {
