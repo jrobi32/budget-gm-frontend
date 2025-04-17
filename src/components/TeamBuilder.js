@@ -73,7 +73,10 @@ const TeamBuilder = ({ onError, nickname }) => {
     const loadPlayerPool = async () => {
         try {
             console.log('Loading player pool from:', API_URL);
-            const response = await axios.get(`${API_URL}/player_pool`);
+            console.log('Environment:', process.env.NODE_ENV);
+            console.log('Full environment:', process.env);
+            
+            const response = await axios.get(`${API_URL}/api/player_pool`);
             console.log('Player pool response:', response.data);
             
             if (!response.data || Object.keys(response.data).length === 0) {
@@ -93,6 +96,12 @@ const TeamBuilder = ({ onError, nickname }) => {
             setError('');
         } catch (error) {
             console.error('Error loading player pool:', error);
+            console.error('Error details:', {
+                message: error.message,
+                response: error.response,
+                request: error.request,
+                config: error.config
+            });
             const errorMessage = error.response?.data?.error || error.message;
             setError(`Error loading player pool: ${errorMessage}`);
             setPlayerOptions({
