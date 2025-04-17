@@ -86,7 +86,7 @@ const TeamBuilder = ({ onError, nickname }) => {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 },
-                withCredentials: true
+                withCredentials: false
             });
 
             console.log('Making request to:', `${API_URL}/api/player_pool`);
