@@ -4,7 +4,7 @@ import './TeamBuilder.css';
 import { playerIds } from '../playerIds';
 
 // Get API URL from environment variable or use default
-const API_URL = process.env.REACT_APP_API_URL || '/api';
+const API_URL = process.env.REACT_APP_API_URL || 'https://budget-gm-backend.onrender.com/api';
 
 // Function to get player image URL
 const getPlayerImageUrl = (playerName) => {
