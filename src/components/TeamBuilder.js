@@ -85,11 +85,17 @@ const TeamBuilder = ({ onError, nickname }) => {
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
-                }
+                },
+                withCredentials: true
             });
 
             console.log('Making request to:', `${API_URL}/api/player_pool`);
-            const response = await api.get('/api/player_pool');
+            const response = await api.get('/api/player_pool', {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
             console.log('Player pool response:', response.data);
             
             if (!response.data || Object.keys(response.data).length === 0) {
