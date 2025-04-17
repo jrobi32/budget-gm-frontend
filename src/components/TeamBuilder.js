@@ -4,7 +4,7 @@ import './TeamBuilder.css';
 import { playerIds } from '../playerIds';
 
 // Get API URL from environment variable or use default
-const API_URL = process.env.REACT_APP_API_URL;
+const API_URL = process.env.REACT_APP_API_URL || 'https://budget-gm-backend.onrender.com';
 
 // Function to get player image URL
 const getPlayerImageUrl = (playerName) => {
@@ -81,14 +81,14 @@ const TeamBuilder = ({ onError, nickname }) => {
 
             // Create axios instance with default config
             const api = axios.create({
-                baseURL: process.env.REACT_APP_API_URL,
+                baseURL: API_URL,
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 }
             });
 
-            console.log('Making request to:', `${process.env.REACT_APP_API_URL}/api/player_pool`);
+            console.log('Making request to:', `${API_URL}/api/player_pool`);
             const response = await api.get('/api/player_pool');
             console.log('Player pool response:', response.data);
             
