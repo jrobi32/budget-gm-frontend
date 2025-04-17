@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import './TeamBuilder.css';
 import { playerIds } from '../playerIds';
 
@@ -79,45 +78,46 @@ const TeamBuilder = ({ onError, nickname }) => {
                 REACT_APP_API_URL: process.env.REACT_APP_API_URL
             });
 
-            // Create axios instance with default config
-            const api = axios.create({
-                baseURL: API_URL,
+            console.log('Making request to:', `${API_URL}/api/player_pool`);
+            const response = await fetch(`${API_URL}/api/player_pool`, {
+                method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 },
-                withCredentials: false
+                mode: 'cors',
+                credentials: 'omit'
             });
 
-            console.log('Making request to:', `${API_URL}/api/player_pool`);
-            const response = await api.get('/api/player_pool');
-            console.log('Player pool response:', response.data);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('Player pool response:', data);
             
-            if (!response.data || Object.keys(response.data).length === 0) {
+            if (!data || Object.keys(data).length === 0) {
                 throw new Error('Empty player pool received');
             }
             
             // Validate the response structure
             const requiredCategories = ['$3', '$2', '$1', '$0'];
             for (const category of requiredCategories) {
-                if (!response.data[category] || !Array.isArray(response.data[category])) {
+                if (!data[category] || !Array.isArray(data[category])) {
                     throw new Error(`Invalid player pool structure: missing or invalid ${category} category`);
                 }
             }
             
-            setPlayerPool(response.data);
-            updatePlayerOptions(response.data, []);  // Pass empty selected players initially
+            setPlayerPool(data);
+            updatePlayerOptions(data, []);  // Pass empty selected players initially
             setError('');
         } catch (error) {
             console.error('Error loading player pool:', error);
             console.error('Error details:', {
                 message: error.message,
-                response: error.response,
-                request: error.request,
-                config: error.config,
                 stack: error.stack
             });
-            const errorMessage = error.response?.data?.error || error.message;
+            const errorMessage = error.message;
             setError(`Error loading player pool: ${errorMessage}`);
             setPlayerOptions({
                 '$3': [],
@@ -201,31 +201,45 @@ const TeamBuilder = ({ onError, nickname }) => {
 
         try {
             console.log('Simulating team with players:', selectedPlayers.map(p => p.name));
-            const response = await axios.post(`${API_URL}/simulate`, {
-                players: selectedPlayers.map(p => p.name),
-                player_name: nickname.trim()
+            const response = await fetch(`${API_URL}/simulate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    players: selectedPlayers.map(p => p.name),
+                    player_name: nickname.trim()
+                }),
+                mode: 'cors',
+                credentials: 'omit'
             });
             
-            console.log('Simulation response:', response.data);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('Simulation response:', data);
             
             // Validate the response structure
-            if (!response.data || typeof response.data !== 'object') {
+            if (!data || typeof data !== 'object') {
                 throw new Error('Invalid response from server');
             }
             
             const requiredFields = ['wins', 'losses', 'win_probability', 'team_stats'];
             for (const field of requiredFields) {
-                if (!(field in response.data)) {
+                if (!(field in data)) {
                     throw new Error(`Missing required field in response: ${field}`);
                 }
             }
             
-            setRecord(response.data);
+            setRecord(data);
             setIsSimulated(true);
             setError('');
         } catch (error) {
             console.error('Error simulating team:', error);
-            setError(`Error simulating team: ${error.response?.data?.error || error.message}`);
+            setError(`Error simulating team: ${error.message}`);
         }
     };
 
