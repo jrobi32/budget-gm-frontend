@@ -71,7 +71,7 @@ const TeamBuilder = ({ onError, nickname }) => {
 
     const loadPlayerPool = async () => {
         try {
-            const response = await fetch(`${API_URL}/api/player_pool`, {
+            const response = await fetch('/api/player_pool', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -176,7 +176,7 @@ const TeamBuilder = ({ onError, nickname }) => {
 
         try {
             console.log('Simulating team with players:', selectedPlayers.map(p => p.name));
-            const response = await fetch(`${API_URL}/api/simulate`, {
+            const response = await fetch('/api/simulate', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
