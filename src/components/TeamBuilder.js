@@ -72,11 +72,24 @@ const TeamBuilder = ({ onError, nickname }) => {
 
     const loadPlayerPool = async () => {
         try {
-            console.log('Loading player pool from:', API_URL);
-            console.log('Environment:', process.env.NODE_ENV);
-            console.log('Full environment:', process.env);
-            
-            const response = await axios.get(`${API_URL}/api/player_pool`);
+            // Log the full environment for debugging
+            console.log('Environment:', {
+                NODE_ENV: process.env.NODE_ENV,
+                API_URL: process.env.REACT_APP_API_URL,
+                REACT_APP_API_URL: process.env.REACT_APP_API_URL
+            });
+
+            // Create axios instance with default config
+            const api = axios.create({
+                baseURL: process.env.REACT_APP_API_URL,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
+
+            console.log('Making request to:', `${process.env.REACT_APP_API_URL}/api/player_pool`);
+            const response = await api.get('/api/player_pool');
             console.log('Player pool response:', response.data);
             
             if (!response.data || Object.keys(response.data).length === 0) {
@@ -100,7 +113,8 @@ const TeamBuilder = ({ onError, nickname }) => {
                 message: error.message,
                 response: error.response,
                 request: error.request,
-                config: error.config
+                config: error.config,
+                stack: error.stack
             });
             const errorMessage = error.response?.data?.error || error.message;
             setError(`Error loading player pool: ${errorMessage}`);
