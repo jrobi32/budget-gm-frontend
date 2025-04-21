@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './TeamBuilder.css';
 import { playerIds } from '../playerIds';
 
@@ -56,22 +56,7 @@ const TeamBuilder = ({ onError, nickname }) => {
     const [imageErrors, setImageErrors] = useState({});
     const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
-        const initializeApp = async () => {
-            try {
-                setIsLoading(true);
-                await loadPlayerPool();
-            } catch (error) {
-                console.error('Error initializing app:', error);
-                setError('Failed to load application data. Please try again later.');
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        initializeApp();
-    }, []);
-
-    const loadPlayerPool = async () => {
+    const loadPlayerPool = useCallback(async () => {
         try {
             const response = await fetch(`${API_URL}/api/player_pool`, {
                 method: 'GET',
@@ -105,7 +90,22 @@ const TeamBuilder = ({ onError, nickname }) => {
                 '$1': []
             });
         }
-    };
+    }, [API_URL]);
+
+    useEffect(() => {
+        const initializeApp = async () => {
+            try {
+                setIsLoading(true);
+                await loadPlayerPool();
+            } catch (error) {
+                console.error('Error initializing app:', error);
+                setError('Failed to load application data. Please try again later.');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        initializeApp();
+    }, [loadPlayerPool]);
 
     const updatePlayerOptions = (pool, currentSelectedPlayers) => {
         const selectedPlayerNames = currentSelectedPlayers.map(p => p.name);

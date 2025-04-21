@@ -1,9 +1,14 @@
 [build]
-  command = "npm run build"
+  command = "CI=false npm run build && cd api && npm install && npm run build"
   publish = "build"
-  environment = { CI = "false" }
+  functions = "api/dist"
 
 [build.environment]
+  REACT_APP_API_URL = "https://budget-gm-backend.onrender.com"
   NODE_VERSION = "18"
   NPM_VERSION = "9"
-  REACT_APP_API_URL = "https://budget-gm-backend.onrender.com" 
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200 
