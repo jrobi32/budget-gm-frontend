@@ -46,10 +46,12 @@ const getPlayerImageUrl = (playerName) => {
 const TeamBuilder = ({ onError, nickname }) => {
     const [playerPool, setPlayerPool] = useState({});
     const [selectedPlayers, setSelectedPlayers] = useState([]);
-    const [playerOptions, setPlayerOptions] = useState({});
-    const [budget, setBudget] = useState(10);
-    const [record, setRecord] = useState(null);
+    const [remainingBudget, setRemainingBudget] = useState(15);
     const [error, setError] = useState('');
+    const [hasSubmitted, setHasSubmitted] = useState(false);
+    const [simulationResults, setSimulationResults] = useState(null);
+    const [rankings, setRankings] = useState(null);
+    const [playerOptions, setPlayerOptions] = useState({});
     const [isSimulated, setIsSimulated] = useState(false);
     const [imageErrors, setImageErrors] = useState({});
     const [isLoading, setIsLoading] = useState(true);
@@ -125,26 +127,34 @@ const TeamBuilder = ({ onError, nickname }) => {
         setPlayerOptions(filteredOptions);
     };
 
-    const selectPlayer = (player) => {
-        if (selectedPlayers.some(p => p.name === player.name)) {
-            setError('Player already selected');
+    const getRandomPlayers = (category) => {
+        if (!playerPool[category]) return [];
+        const players = playerPool[category];
+        if (players.length < 5) return players;
+        return players.sort(() => 0.5 - Math.random()).slice(0, 5);
+    };
+
+    const selectPlayer = (player, category) => {
+        if (hasSubmitted) {
+            setError('You have already submitted your team. Cannot make changes.');
             return;
         }
+        
+        const cost = parseInt(category.replace('$', ''));
         
         if (selectedPlayers.length >= 5) {
-            setError('Team is already full');
-            return;
-        }
-        
-        if (budget < player.cost) {
-            setError('Not enough budget');
+            setError('You can only select 5 players!');
             return;
         }
 
-        const newSelectedPlayers = [...selectedPlayers, player];
-        setSelectedPlayers(newSelectedPlayers);
-        setBudget(budget - player.cost);
-        updatePlayerOptions(playerPool, newSelectedPlayers);  // Pass the updated selected players
+        if (cost > remainingBudget) {
+            setError(`Not enough budget! You need $${cost} but only have $${remainingBudget} remaining.`);
+            return;
+        }
+
+        player.cost = category;
+        setSelectedPlayers([...selectedPlayers, player]);
+        setRemainingBudget(remainingBudget - cost);
         setError('');
     };
 
@@ -158,7 +168,7 @@ const TeamBuilder = ({ onError, nickname }) => {
         if (player) {
             const newSelectedPlayers = selectedPlayers.filter(p => p.name !== playerName);
             setSelectedPlayers(newSelectedPlayers);
-            setBudget(budget + player.cost);
+            setRemainingBudget(remainingBudget + parseInt(player.cost.replace('$', '')));
             updatePlayerOptions(playerPool, newSelectedPlayers);
         }
     };
@@ -200,7 +210,7 @@ const TeamBuilder = ({ onError, nickname }) => {
                 throw new Error('Invalid response from server');
             }
             
-            setRecord(data);
+            setSimulationResults(data);
             setIsSimulated(true);
             setError('');
         } catch (error) {
@@ -225,7 +235,7 @@ const TeamBuilder = ({ onError, nickname }) => {
                     <div className="team-section">
                         <h2>Selected Players</h2>
                         <div className="budget-display">
-                            Remaining Budget: ${budget}
+                            Remaining Budget: ${remainingBudget}
                         </div>
                         <div className="selected-players">
                             {selectedPlayers.map((player, index) => (
@@ -244,7 +254,7 @@ const TeamBuilder = ({ onError, nickname }) => {
                                     )}
                                     <div className="player-info">
                                         <h3>{player.name}</h3>
-                                        <p>Cost: ${player.cost}</p>
+                                        <p>Cost: {player.cost}</p>
                                     </div>
                                     <button 
                                         onClick={() => removePlayer(player.name)}
@@ -268,10 +278,10 @@ const TeamBuilder = ({ onError, nickname }) => {
                                 {error && <div className="error-message">{error}</div>}
                             </div>
                         )}
-                        {record && (
+                        {simulationResults && (
                             <div className="record-display">
-                                <h3>Season Record: {record.wins}-{record.losses}</h3>
-                                <p>Win Probability: {(record.win_probability * 100).toFixed(1)}%</p>
+                                <h3>Season Record: {simulationResults.wins}-{simulationResults.losses}</h3>
+                                <p>Win Probability: {(simulationResults.win_probability * 100).toFixed(1)}%</p>
                             </div>
                         )}
                     </div>
@@ -298,11 +308,11 @@ const TeamBuilder = ({ onError, nickname }) => {
                                             )}
                                             <div className="player-info">
                                                 <h3>{player.name}</h3>
-                                                <p>Cost: ${player.cost}</p>
+                                                <p>Cost: {player.cost}</p>
                                             </div>
                                             <button 
-                                                onClick={() => selectPlayer(player)}
-                                                disabled={budget < player.cost || selectedPlayers.length >= 5 || isSimulated}
+                                                onClick={() => selectPlayer(player, category)}
+                                                disabled={hasSubmitted || remainingBudget < parseInt(category.replace('$', '')) || selectedPlayers.length >= 5 || isSimulated}
                                                 className="select-button"
                                             >
                                                 Select
