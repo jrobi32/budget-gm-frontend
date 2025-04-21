@@ -44,14 +44,26 @@ const getPlayerImageUrl = (playerName) => {
 };
 
 const TeamBuilder = ({ onError, nickname }) => {
-    const [playerPool, setPlayerPool] = useState({});
+    const [playerPool, setPlayerPool] = useState({
+        '$5': [],
+        '$4': [],
+        '$3': [],
+        '$2': [],
+        '$1': []
+    });
     const [selectedPlayers, setSelectedPlayers] = useState([]);
-    const [remainingBudget, setRemainingBudget] = useState(15);
+    const [budget, setBudget] = useState(15);
     const [error, setError] = useState('');
     const [hasSubmitted, setHasSubmitted] = useState(false);
     const [simulationResults, setSimulationResults] = useState(null);
     const [rankings, setRankings] = useState(null);
-    const [playerOptions, setPlayerOptions] = useState({});
+    const [playerOptions, setPlayerOptions] = useState({
+        '$5': [],
+        '$4': [],
+        '$3': [],
+        '$2': [],
+        '$1': []
+    });
     const [isSimulated, setIsSimulated] = useState(false);
     const [imageErrors, setImageErrors] = useState({});
     const [isLoading, setIsLoading] = useState(true);
@@ -117,8 +129,8 @@ const TeamBuilder = ({ onError, nickname }) => {
                     !selectedPlayerNames.includes(player.name)
                 );
                 filteredOptions[category] = availablePlayers.map(player => ({
-                        ...player,
-                        cost: parseInt(category.replace('$', ''))
+                    ...player,
+                    cost: parseInt(category.replace('$', ''))
                 }));
             } else {
                 filteredOptions[category] = [];
@@ -148,14 +160,14 @@ const TeamBuilder = ({ onError, nickname }) => {
             return;
         }
 
-        if (cost > remainingBudget) {
-            setError(`Not enough budget! You need $${cost} but only have $${remainingBudget} remaining.`);
+        if (cost > budget) {
+            setError(`Not enough budget! You need $${cost} but only have $${budget} remaining.`);
             return;
         }
 
         player.cost = category;
         setSelectedPlayers([...selectedPlayers, player]);
-        setRemainingBudget(remainingBudget - cost);
+        setBudget(budget - cost);
         setError('');
     };
 
@@ -169,7 +181,7 @@ const TeamBuilder = ({ onError, nickname }) => {
         if (player) {
             const newSelectedPlayers = selectedPlayers.filter(p => p.name !== playerName);
             setSelectedPlayers(newSelectedPlayers);
-            setRemainingBudget(remainingBudget + parseInt(player.cost.replace('$', '')));
+            setBudget(budget + parseInt(player.cost.replace('$', '')));
             updatePlayerOptions(playerPool, newSelectedPlayers);
         }
     };
@@ -236,7 +248,7 @@ const TeamBuilder = ({ onError, nickname }) => {
                     <div className="team-section">
                         <h2>Selected Players</h2>
                         <div className="budget-display">
-                            Remaining Budget: ${remainingBudget}
+                            Remaining Budget: ${budget}
                         </div>
                         <div className="selected-players">
                             {selectedPlayers.map((player, index) => (
@@ -313,7 +325,7 @@ const TeamBuilder = ({ onError, nickname }) => {
                                             </div>
                                             <button 
                                                 onClick={() => selectPlayer(player, category)}
-                                                disabled={hasSubmitted || remainingBudget < parseInt(category.replace('$', '')) || selectedPlayers.length >= 5 || isSimulated}
+                                                disabled={hasSubmitted || budget < parseInt(category.replace('$', '')) || selectedPlayers.length >= 5 || isSimulated}
                                                 className="select-button"
                                             >
                                                 Select
