@@ -73,7 +73,7 @@ const TeamBuilder = ({ onError, nickname }) => {
 
     const loadPlayerPool = async () => {
         try {
-            const response = await fetch('/api/player_pool', {
+            const response = await fetch(`${API_URL}/api/player_pool`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -98,10 +98,11 @@ const TeamBuilder = ({ onError, nickname }) => {
             console.error('Error loading player pool:', error);
             setError(`Error loading player pool: ${error.message}`);
             setPlayerOptions({
+                '$5': [],
+                '$4': [],
                 '$3': [],
                 '$2': [],
-                '$1': [],
-                '$0': []
+                '$1': []
             });
         }
     };
@@ -110,7 +111,7 @@ const TeamBuilder = ({ onError, nickname }) => {
         const selectedPlayerNames = currentSelectedPlayers.map(p => p.name);
         const filteredOptions = {};
         
-        ['$3', '$2', '$1', '$0'].forEach(category => {
+        ['$5', '$4', '$3', '$2', '$1'].forEach(category => {
             if (pool[category]) {
                 const availablePlayers = pool[category].filter(player => 
                     !selectedPlayerNames.includes(player.name)
