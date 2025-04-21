@@ -105,7 +105,7 @@ const TeamBuilder = ({ onError, nickname }) => {
             }
         };
         initializeApp();
-    }, [loadPlayerPool]);
+    }, []);
 
     const updatePlayerOptions = (pool, currentSelectedPlayers) => {
         const selectedPlayerNames = currentSelectedPlayers.map(p => p.name);
