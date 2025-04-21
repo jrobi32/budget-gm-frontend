@@ -1,5 +1,5 @@
 [build]
-  command = "CI=false npm run build && cd api && npm install && npm run build"
+  command = "npm run build && cd api && npm install && npm run build"
   publish = "build"
   functions = "api/dist"
 
@@ -7,6 +7,7 @@
   REACT_APP_API_URL = "https://budget-gm-backend.onrender.com"
   NODE_VERSION = "18"
   NPM_VERSION = "9"
+  CI = "false"
 
 [[redirects]]
   from = "/api/*"
