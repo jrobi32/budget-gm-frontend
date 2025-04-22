@@ -110,7 +110,7 @@ const TeamBuilder = ({ onError, nickname }) => {
         });
         
         setPlayerOptions(filteredOptions);
-    }, [setPlayerOptions]);
+    }, []);
 
     const loadPlayerPool = useCallback(async () => {
         try {
@@ -182,7 +182,7 @@ const TeamBuilder = ({ onError, nickname }) => {
         return () => {
             isMounted = false;
         };
-    }, [loadPlayerPool, setIsLoading, setError, setPlayerOptions]);
+    }, [loadPlayerPool, setIsLoading, setError]);
 
     const getRandomPlayers = useCallback((category) => {
         if (!playerPool[category]) return [];
