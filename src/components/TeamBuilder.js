@@ -218,7 +218,7 @@ const TeamBuilder = ({ onError, nickname }) => {
             console.error('Error simulating team:', error);
             setError(`Error simulating team: ${error.message}`);
         }
-    }, [API_URL, nickname, selectedPlayers]);
+    }, [nickname, selectedPlayers]);
 
     const handleImageError = useCallback((playerName) => {
         setImageErrors(prev => ({
