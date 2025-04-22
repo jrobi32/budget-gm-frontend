@@ -118,7 +118,7 @@ const TeamBuilder = ({ onError, nickname }) => {
         } finally {
             setIsLoading(false);
         }
-    }, []); // No dependencies needed as API_URL is a constant and updatePlayerOptions is stable
+    }, [API_URL, updatePlayerOptions]);
 
     // Initial data loading effect
     useEffect(() => {
