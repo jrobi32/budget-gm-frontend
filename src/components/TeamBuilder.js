@@ -55,7 +55,7 @@ const TeamBuilder = ({ onError, nickname }) => {
         } finally {
             setIsLoading(false);
         }
-    }, [updatePlayerOptions, API_URL, onError]);
+    }, [updatePlayerOptions, onError]);
 
     // Initial data loading effect
     useEffect(() => {
