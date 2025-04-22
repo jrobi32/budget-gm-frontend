@@ -118,9 +118,7 @@ const TeamBuilder = ({ onError, nickname }) => {
         } finally {
             setIsLoading(false);
         }
-    // API_URL is a constant imported from config.js and never changes
-    // updatePlayerOptions is a function that needs to be in the dependency array
-    }, [updatePlayerOptions]);
+    }, []); // Remove all dependencies since API_URL is a constant and updatePlayerOptions is stable
 
     // Initial data loading effect
     useEffect(() => {
