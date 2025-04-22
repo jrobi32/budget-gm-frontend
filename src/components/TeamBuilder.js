@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import './TeamBuilder.css';
 import { playerIds } from '../playerIds';
 
@@ -24,33 +24,23 @@ const getPlayerImageUrl = (playerName) => {
     }
     
     // For NBA players, use their official NBA.com image
-    // First try to get the player ID from the playerIds mapping
     const playerId = playerIds[playerName];
     if (playerId) {
         return `https://cdn.nba.com/headshots/nba/latest/1040x760/${playerId}.png`;
     }
     
-    // If no player ID is found, try to get it from the player pool
-    const playerPool = window.playerPool || {};
-    for (const category in playerPool) {
-        const player = playerPool[category]?.find(p => p.name === playerName);
-        if (player?.id) {
-            return `https://cdn.nba.com/headshots/nba/latest/1040x760/${player.id}.png`;
-        }
-    }
-    
-    // Fallback for any other players - use a more professional looking placeholder
+    // Fallback for any other players
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(playerName)}&background=1E88E5&color=fff&size=200&bold=true&format=svg`;
 };
 
-const PlayerCard = ({ player, onSelect, isSelected, onDeselect }) => {
-    const handleClick = () => {
+const PlayerCard = React.memo(({ player, onSelect, isSelected, onDeselect }) => {
+    const handleClick = useCallback(() => {
         if (isSelected) {
             onDeselect(player);
         } else {
             onSelect(player);
         }
-    };
+    }, [isSelected, onSelect, onDeselect, player]);
 
     return (
         <div className={`player-card ${isSelected ? 'selected' : ''}`} onClick={handleClick}>
@@ -74,7 +64,7 @@ const PlayerCard = ({ player, onSelect, isSelected, onDeselect }) => {
             </div>
         </div>
     );
-};
+});
 
 const TeamBuilder = ({ onError, nickname }) => {
     const [playerPool, setPlayerPool] = useState({
@@ -173,14 +163,14 @@ const TeamBuilder = ({ onError, nickname }) => {
         initializeApp();
     }, [loadPlayerPool]);
 
-    const getRandomPlayers = (category) => {
+    const getRandomPlayers = useCallback((category) => {
         if (!playerPool[category]) return [];
         const players = playerPool[category];
         if (players.length < 5) return players;
         return players.sort(() => 0.5 - Math.random()).slice(0, 5);
-    };
+    }, [playerPool]);
 
-    const selectPlayer = (player, category) => {
+    const selectPlayer = useCallback((player, category) => {
         if (hasSubmitted) {
             setError('You have already submitted your team. Cannot make changes.');
             return;
@@ -199,12 +189,12 @@ const TeamBuilder = ({ onError, nickname }) => {
         }
 
         player.cost = category;
-        setSelectedPlayers([...selectedPlayers, player]);
-        setBudget(budget - cost);
+        setSelectedPlayers(prev => [...prev, player]);
+        setBudget(prev => prev - cost);
         setError('');
-    };
+    }, [budget, hasSubmitted, selectedPlayers.length]);
 
-    const removePlayer = (playerName) => {
+    const removePlayer = useCallback((playerName) => {
         if (isSimulated) {
             setError('Cannot remove players after simulation');
             return;
@@ -214,12 +204,12 @@ const TeamBuilder = ({ onError, nickname }) => {
         if (player) {
             const newSelectedPlayers = selectedPlayers.filter(p => p.name !== playerName);
             setSelectedPlayers(newSelectedPlayers);
-            setBudget(budget + parseInt(player.cost.replace('$', '')));
+            setBudget(prev => prev + parseInt(player.cost.replace('$', '')));
             updatePlayerOptions(playerPool, newSelectedPlayers);
         }
-    };
+    }, [isSimulated, playerPool, selectedPlayers, updatePlayerOptions]);
 
-    const simulateTeam = async () => {
+    const simulateTeam = useCallback(async () => {
         if (selectedPlayers.length !== 5) {
             setError('Team must have exactly 5 players');
             return;
@@ -231,7 +221,6 @@ const TeamBuilder = ({ onError, nickname }) => {
         }
 
         try {
-            console.log('Simulating team with players:', selectedPlayers.map(p => p.name));
             const response = await fetch(`${API_URL}/api/simulate-team`, {
                 method: 'POST',
                 headers: {
@@ -255,7 +244,6 @@ const TeamBuilder = ({ onError, nickname }) => {
             }
 
             const data = await response.json();
-            console.log('Simulation response:', data);
             if (!data || !data.wins || !data.losses) {
                 throw new Error('Invalid response from server');
             }
@@ -267,88 +255,91 @@ const TeamBuilder = ({ onError, nickname }) => {
             console.error('Error simulating team:', error);
             setError(`Error simulating team: ${error.message}`);
         }
-    };
+    }, [API_URL, nickname, selectedPlayers]);
 
-    const handleImageError = (playerName) => {
+    const handleImageError = useCallback((playerName) => {
         setImageErrors(prev => ({
             ...prev,
             [playerName]: true
         }));
-    };
+    }, []);
+
+    const selectedPlayersList = useMemo(() => (
+        selectedPlayers.map((player, index) => (
+            <PlayerCard 
+                key={index}
+                player={player}
+                onSelect={selectPlayer}
+                onDeselect={removePlayer}
+                isSelected={selectedPlayers.includes(player)}
+            />
+        ))
+    ), [selectedPlayers, selectPlayer, removePlayer]);
+
+    const playerOptionsList = useMemo(() => (
+        Object.entries(playerOptions).map(([category, players]) => (
+            <div key={category} className="player-category">
+                <h3>{category} Players</h3>
+                <div className="player-options">
+                    {players.map((player, index) => (
+                        <PlayerCard 
+                            key={index}
+                            player={player}
+                            onSelect={selectPlayer}
+                            onDeselect={removePlayer}
+                            isSelected={selectedPlayers.includes(player)}
+                        />
+                    ))}
+                </div>
+            </div>
+        ))
+    ), [playerOptions, selectPlayer, removePlayer, selectedPlayers]);
+
+    if (isLoading) {
+        return <div className="loading">Loading...</div>;
+    }
 
     return (
         <div className="team-builder">
-            {isLoading ? (
-                <div className="loading">Loading...</div>
-            ) : (
-                <>
-                    <div className="team-section">
-                        <h2>Selected Players</h2>
-                        <div className="budget-display">
-                            Remaining Budget: ${budget}
-                        </div>
-                        <div className="selected-players">
-                            {selectedPlayers.map((player, index) => (
-                                <PlayerCard 
-                                    key={index}
-                                    player={player}
-                                    onSelect={selectPlayer}
-                                    onDeselect={removePlayer}
-                                    isSelected={selectedPlayers.includes(player)}
-                                />
-                            ))}
-                        </div>
-
-                        {selectedPlayers.length === 5 && !isSimulated && (
-                            <div className="simulation-section">
-                                <button 
-                                    className="simulate-button"
-                                    onClick={simulateTeam}
-                                >
-                                    Simulate Season
-                                </button>
-                                {error && <div className="error-message">{error}</div>}
-                            </div>
-                        )}
-                        {simulationResults && (
-                            <div className="record-display">
-                                <h3>Season Record: {simulationResults.wins}-{simulationResults.losses}</h3>
-                                <p>Win Probability: {(simulationResults.win_probability * 100).toFixed(1)}%</p>
-                                {simulationResults.team_stats && (
-                                    <div className="team-stats">
-                                        <h4>Team Statistics</h4>
-                                        <p>Points per Game: {simulationResults.team_stats.PTS.toFixed(1)}</p>
-                                        <p>Assists per Game: {simulationResults.team_stats.AST.toFixed(1)}</p>
-                                        <p>Rebounds per Game: {simulationResults.team_stats.REB.toFixed(1)}</p>
-                                        <p>Steals per Game: {simulationResults.team_stats.STL.toFixed(1)}</p>
-                                        <p>Blocks per Game: {simulationResults.team_stats.BLK.toFixed(1)}</p>
-                                    </div>
-                                )}
+            <div className="team-section">
+                <h2>Your Team</h2>
+                <div className="budget-display">
+                    Remaining Budget: ${budget}
+                </div>
+                <div className="selected-players">
+                    {selectedPlayersList}
+                </div>
+                {selectedPlayers.length === 5 && !isSimulated && (
+                    <button 
+                        className="simulate-button"
+                        onClick={simulateTeam}
+                        disabled={!nickname || nickname.trim() === ''}
+                    >
+                        Simulate Season
+                    </button>
+                )}
+                {simulationResults && (
+                    <div className="simulation-results">
+                        <h3>Season Results</h3>
+                        <p>Record: {simulationResults.wins}-{simulationResults.losses}</p>
+                        <p>Win Probability: {(simulationResults.win_probability * 100).toFixed(1)}%</p>
+                        {simulationResults.team_stats && (
+                            <div className="team-stats">
+                                <h4>Team Statistics</h4>
+                                <p>Points per Game: {simulationResults.team_stats.PTS.toFixed(1)}</p>
+                                <p>Assists per Game: {simulationResults.team_stats.AST.toFixed(1)}</p>
+                                <p>Rebounds per Game: {simulationResults.team_stats.REB.toFixed(1)}</p>
+                                <p>Steals per Game: {simulationResults.team_stats.STL.toFixed(1)}</p>
+                                <p>Blocks per Game: {simulationResults.team_stats.BLK.toFixed(1)}</p>
                             </div>
                         )}
                     </div>
-
-                    <div className="player-section">
-                        <h2>Available Players</h2>
-                        {Object.entries(playerOptions).map(([category, players]) => (
-                            <div key={category} className="player-category">
-                                <div className="category-header">{category} Players</div>
-                                <div className="player-options">
-                                    {players.map((player, index) => (
-                                        <PlayerCard 
-                                            key={index}
-                                            player={player}
-                                            onSelect={selectPlayer}
-                                            onDeselect={removePlayer}
-                                            isSelected={selectedPlayers.includes(player)}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </>
-            )}
+                )}
+            </div>
+            <div className="player-section">
+                <h2>Available Players</h2>
+                {playerOptionsList}
+            </div>
             {error && <div className="error-message">{error}</div>}
         </div>
     );
