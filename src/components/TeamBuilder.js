@@ -118,7 +118,7 @@ const TeamBuilder = ({ onError, nickname }) => {
         } finally {
             setIsLoading(false);
         }
-    }, [API_URL, updatePlayerOptions]);
+    }, [updatePlayerOptions]);
 
     // Initial data loading effect
     useEffect(() => {
@@ -216,7 +216,7 @@ const TeamBuilder = ({ onError, nickname }) => {
             console.error('Error simulating team:', error);
             setError(`Error simulating team: ${error.message}`);
         }
-    }, []); // No dependencies needed as API_URL is a constant and state updates are handled by React
+    }, [selectedPlayers, nickname]);
 
     const handleImageError = useCallback((playerName) => {
         setImageErrors(prev => ({
