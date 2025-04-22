@@ -101,6 +101,27 @@ const TeamBuilder = ({ onError, nickname }) => {
     const [imageErrors, setImageErrors] = useState({});
     const [isLoading, setIsLoading] = useState(true);
 
+    const updatePlayerOptions = useCallback((pool, currentSelectedPlayers) => {
+        const selectedPlayerNames = currentSelectedPlayers.map(p => p.name);
+        const filteredOptions = {};
+        
+        ['$5', '$4', '$3', '$2', '$1'].forEach(category => {
+            if (pool[category]) {
+                const availablePlayers = pool[category].filter(player => 
+                    !selectedPlayerNames.includes(player.name)
+                );
+                filteredOptions[category] = availablePlayers.map(player => ({
+                    ...player,
+                    cost: parseInt(category.replace('$', ''))
+                }));
+            } else {
+                filteredOptions[category] = [];
+            }
+        });
+        
+        setPlayerOptions(filteredOptions);
+    }, []);
+
     const loadPlayerPool = useCallback(async () => {
         try {
             const response = await fetch(`${API_URL}/api/player-pool`, {
@@ -151,27 +172,6 @@ const TeamBuilder = ({ onError, nickname }) => {
         };
         initializeApp();
     }, [loadPlayerPool]);
-
-    const updatePlayerOptions = useCallback((pool, currentSelectedPlayers) => {
-        const selectedPlayerNames = currentSelectedPlayers.map(p => p.name);
-        const filteredOptions = {};
-        
-        ['$5', '$4', '$3', '$2', '$1'].forEach(category => {
-            if (pool[category]) {
-                const availablePlayers = pool[category].filter(player => 
-                    !selectedPlayerNames.includes(player.name)
-                );
-                filteredOptions[category] = availablePlayers.map(player => ({
-                    ...player,
-                    cost: parseInt(category.replace('$', ''))
-                }));
-            } else {
-                filteredOptions[category] = [];
-            }
-        });
-        
-        setPlayerOptions(filteredOptions);
-    }, []);
 
     const getRandomPlayers = (category) => {
         if (!playerPool[category]) return [];
