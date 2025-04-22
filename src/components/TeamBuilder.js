@@ -118,7 +118,6 @@ const TeamBuilder = ({ onError, nickname }) => {
         } finally {
             setIsLoading(false);
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [updatePlayerOptions]);
 
     // Initial data loading effect
@@ -217,7 +216,6 @@ const TeamBuilder = ({ onError, nickname }) => {
             console.error('Error simulating team:', error);
             setError(`Error simulating team: ${error.message}`);
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [nickname, selectedPlayers]);
 
     const handleImageError = useCallback((playerName) => {
