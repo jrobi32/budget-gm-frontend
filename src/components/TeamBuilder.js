@@ -118,7 +118,7 @@ const TeamBuilder = ({ onError, nickname }) => {
         } finally {
             setIsLoading(false);
         }
-    }, [updatePlayerOptions]);
+    }, []);
 
     // Initial data loading effect
     useEffect(() => {
@@ -216,7 +216,7 @@ const TeamBuilder = ({ onError, nickname }) => {
             console.error('Error simulating team:', error);
             setError(`Error simulating team: ${error.message}`);
         }
-    }, [nickname, selectedPlayers]);
+    }, []);
 
     const handleImageError = useCallback((playerName) => {
         setImageErrors(prev => ({
