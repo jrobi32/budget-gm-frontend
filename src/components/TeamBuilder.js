@@ -2,9 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import './TeamBuilder.css';
 import { playerIds } from '../playerIds';
-
-// Get API URL from environment variable or use default
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+import { API_URL } from '../config';
 
 // Function to get player image URL
 const getPlayerImageUrl = (playerName) => {
