@@ -158,31 +158,30 @@ const TeamBuilder = ({ onError, nickname }) => {
         }
     }, [API_URL, updatePlayerOptions, setPlayerPool, setError, setPlayerOptions]);
 
-    useEffect(() => {
+    // Define initialize function outside useEffect to avoid dependency issues
+    const initialize = useCallback(async () => {
         let isMounted = true;
-
-        const initialize = async () => {
-            try {
-                setIsLoading(true);
-                await loadPlayerPool();
-            } catch (error) {
-                console.error('Error initializing app:', error);
-                if (isMounted) {
-                    setError('Failed to load application data. Please try again later.');
-                }
-            } finally {
-                if (isMounted) {
-                    setIsLoading(false);
-                }
+        try {
+            setIsLoading(true);
+            await loadPlayerPool();
+        } catch (error) {
+            console.error('Error initializing app:', error);
+            if (isMounted) {
+                setError('Failed to load application data. Please try again later.');
             }
-        };
-
-        initialize();
-
+        } finally {
+            if (isMounted) {
+                setIsLoading(false);
+            }
+        }
         return () => {
             isMounted = false;
         };
     }, [loadPlayerPool, setIsLoading, setError]);
+
+    useEffect(() => {
+        initialize();
+    }, [initialize]); // Only depend on initialize function
 
     const getRandomPlayers = useCallback((category) => {
         if (!playerPool[category]) return [];
