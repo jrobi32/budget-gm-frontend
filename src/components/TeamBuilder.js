@@ -43,6 +43,39 @@ const getPlayerImageUrl = (playerName) => {
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(playerName)}&background=1E88E5&color=fff&size=200&bold=true&format=svg`;
 };
 
+const PlayerCard = ({ player, onSelect, isSelected, onDeselect }) => {
+    const handleClick = () => {
+        if (isSelected) {
+            onDeselect(player);
+        } else {
+            onSelect(player);
+        }
+    };
+
+    return (
+        <div className={`player-card ${isSelected ? 'selected' : ''}`} onClick={handleClick}>
+            <div className="player-image">
+                <img src={getPlayerImageUrl(player.name)} alt={player.name} />
+            </div>
+            <div className="player-info">
+                <h3>{player.name}</h3>
+                <p className="cost">Cost: {player.cost}</p>
+                {player.stats && (
+                    <div className="player-stats">
+                        <p>PTS: {player.stats.PTS?.toFixed(1) || '0.0'}</p>
+                        <p>AST: {player.stats.AST?.toFixed(1) || '0.0'}</p>
+                        <p>REB: {player.stats.REB?.toFixed(1) || '0.0'}</p>
+                        <p>STL: {player.stats.STL?.toFixed(1) || '0.0'}</p>
+                        <p>BLK: {player.stats.BLK?.toFixed(1) || '0.0'}</p>
+                        <p>FG%: {(player.stats.FG_PCT * 100)?.toFixed(1) || '0.0'}%</p>
+                        <p>3P%: {(player.stats.FG3_PCT * 100)?.toFixed(1) || '0.0'}%</p>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
 const TeamBuilder = ({ onError, nickname }) => {
     const [playerPool, setPlayerPool] = useState({
         '$5': [],
@@ -70,7 +103,7 @@ const TeamBuilder = ({ onError, nickname }) => {
 
     const loadPlayerPool = useCallback(async () => {
         try {
-            const response = await fetch(`${API_URL}/api/player_pool`, {
+            const response = await fetch(`${API_URL}/api/player-pool`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -117,7 +150,7 @@ const TeamBuilder = ({ onError, nickname }) => {
             }
         };
         initializeApp();
-    }, []);
+    }, [loadPlayerPool]);
 
     const updatePlayerOptions = (pool, currentSelectedPlayers) => {
         const selectedPlayerNames = currentSelectedPlayers.map(p => p.name);
@@ -199,14 +232,18 @@ const TeamBuilder = ({ onError, nickname }) => {
 
         try {
             console.log('Simulating team with players:', selectedPlayers.map(p => p.name));
-            const response = await fetch('/api/simulate', {
+            const response = await fetch(`${API_URL}/api/simulate-team`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json'
                 },
                 body: JSON.stringify({
-                    players: selectedPlayers.map(p => p.name),
+                    players: selectedPlayers.map(p => ({
+                        name: p.name,
+                        cost: p.cost,
+                        stats: p.stats || {}
+                    })),
                     player_name: nickname.trim()
                 }),
                 mode: 'cors',
@@ -252,31 +289,13 @@ const TeamBuilder = ({ onError, nickname }) => {
                         </div>
                         <div className="selected-players">
                             {selectedPlayers.map((player, index) => (
-                                <div key={index} className="player-card">
-                                    {!imageErrors[player.name] ? (
-                                        <img 
-                                            src={getPlayerImageUrl(player.name)} 
-                                            alt={player.name} 
-                                            className="player-image"
-                                            onError={() => handleImageError(player.name)}
-                                        />
-                                    ) : (
-                                        <div className="player-image-placeholder">
-                                            {player.name.charAt(0)}
-                                        </div>
-                                    )}
-                                    <div className="player-info">
-                                        <h3>{player.name}</h3>
-                                        <p>Cost: {player.cost}</p>
-                                    </div>
-                                    <button 
-                                        onClick={() => removePlayer(player.name)}
-                                        className="remove-button"
-                                        disabled={isSimulated}
-                                    >
-                                        Remove
-                                    </button>
-                                </div>
+                                <PlayerCard 
+                                    key={index}
+                                    player={player}
+                                    onSelect={selectPlayer}
+                                    onDeselect={removePlayer}
+                                    isSelected={selectedPlayers.includes(player)}
+                                />
                             ))}
                         </div>
 
@@ -295,6 +314,16 @@ const TeamBuilder = ({ onError, nickname }) => {
                             <div className="record-display">
                                 <h3>Season Record: {simulationResults.wins}-{simulationResults.losses}</h3>
                                 <p>Win Probability: {(simulationResults.win_probability * 100).toFixed(1)}%</p>
+                                {simulationResults.team_stats && (
+                                    <div className="team-stats">
+                                        <h4>Team Statistics</h4>
+                                        <p>Points per Game: {simulationResults.team_stats.PTS.toFixed(1)}</p>
+                                        <p>Assists per Game: {simulationResults.team_stats.AST.toFixed(1)}</p>
+                                        <p>Rebounds per Game: {simulationResults.team_stats.REB.toFixed(1)}</p>
+                                        <p>Steals per Game: {simulationResults.team_stats.STL.toFixed(1)}</p>
+                                        <p>Blocks per Game: {simulationResults.team_stats.BLK.toFixed(1)}</p>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
@@ -306,31 +335,13 @@ const TeamBuilder = ({ onError, nickname }) => {
                                 <div className="category-header">{category} Players</div>
                                 <div className="player-options">
                                     {players.map((player, index) => (
-                                        <div key={index} className="player-option">
-                                            {!imageErrors[player.name] ? (
-                                                <img 
-                                                    src={getPlayerImageUrl(player.name)} 
-                                                    alt={player.name} 
-                                                    className="player-image"
-                                                    onError={() => handleImageError(player.name)}
-                                                />
-                                            ) : (
-                                                <div className="player-image-placeholder">
-                                                    {player.name.charAt(0)}
-                                                </div>
-                                            )}
-                                            <div className="player-info">
-                                                <h3>{player.name}</h3>
-                                                <p>Cost: {player.cost}</p>
-                                            </div>
-                                            <button 
-                                                onClick={() => selectPlayer(player, category)}
-                                                disabled={hasSubmitted || budget < parseInt(category.replace('$', '')) || selectedPlayers.length >= 5 || isSimulated}
-                                                className="select-button"
-                                            >
-                                                Select
-                                            </button>
-                                        </div>
+                                        <PlayerCard 
+                                            key={index}
+                                            player={player}
+                                            onSelect={selectPlayer}
+                                            onDeselect={removePlayer}
+                                            isSelected={selectedPlayers.includes(player)}
+                                        />
                                     ))}
                                 </div>
                             </div>
