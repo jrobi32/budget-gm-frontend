@@ -5,7 +5,7 @@
 
 [build.environment]
   REACT_APP_API_URL = "https://budget-gm-backend.onrender.com"
-  NODE_VERSION = "18"
+  NODE_VERSION = "18.17.0"
   NPM_VERSION = "9"
   CI = "false"
   ESLINT_NO_DEV_ERRORS = "true"
@@ -14,4 +14,9 @@
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/api/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
   status = 200 
