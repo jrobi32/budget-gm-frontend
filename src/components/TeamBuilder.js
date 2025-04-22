@@ -1,27 +1,22 @@
-<<<<<<< HEAD
-// hi 
-=======
+// TeamBuilder component for the $5 budget system
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import './TeamBuilder.css';
 
-// Get API URL from environment variable or use default
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-
-const TeamBuilder = () => {
+const TeamBuilder = ({ onError, nickname }) => {
     const [playerPool, setPlayerPool] = useState({});
     const [selectedPlayers, setSelectedPlayers] = useState([]);
     const [playerOptions, setPlayerOptions] = useState([]);
-    const [budget, setBudget] = useState(10);
-    const [record, setRecord] = useState(null);
-    const [playerName, setPlayerName] = useState('');
+    const [budget, setBudget] = useState(5);
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [simulationResults, setSimulationResults] = useState(null);
+    const [isSimulated, setIsSimulated] = useState(false);
 
-    // Memoized function to filter players based on current state
+    // Filter players based on current state
     const filterPlayers = useCallback((pool, currentSelectedPlayers) => {
         const options = [];
-        ['$3', '$2', '$1', '$0'].forEach(category => {
+        ['$5', '$4', '$3', '$2', '$1'].forEach(category => {
             if (pool[category]) {
                 const players = pool[category].filter(player => 
                     !currentSelectedPlayers.some(p => p.name === player.name)
@@ -37,143 +32,222 @@ const TeamBuilder = () => {
         return options;
     }, []);
 
-    // Memoized function to update player options
+    // Update available player options
     const updatePlayerOptions = useCallback((pool) => {
         const filteredOptions = filterPlayers(pool, selectedPlayers);
         setPlayerOptions(filteredOptions);
     }, [filterPlayers, selectedPlayers]);
 
-    // Memoized function to load player pool
+    // Load player pool from backend
     const loadPlayerPool = useCallback(async () => {
         setIsLoading(true);
         try {
-            const response = await axios.get(`${API_URL}/api/player-pool`);
+            const response = await axios.get('/api/player-pool');
             const newPlayerPool = response.data;
             setPlayerPool(newPlayerPool);
             updatePlayerOptions(newPlayerPool);
             setError('');
-        } catch (error) {
-            setError('Error loading player pool: ' + (error.response?.data?.message || error.message));
+        } catch (err) {
+            setError('Error loading player pool: ' + (err.response?.data?.message || err.message));
+            if (onError) onError(err);
         } finally {
             setIsLoading(false);
         }
-    }, [API_URL, updatePlayerOptions]);
+    }, [updatePlayerOptions, onError]);
 
-    // Initial data loading effect
+    // Initial load
     useEffect(() => {
-        let isMounted = true;
-        
-        const fetchData = async () => {
-            if (isMounted) {
-                await loadPlayerPool();
-            }
-        };
-
-        fetchData();
-
-        return () => {
-            isMounted = false;
-        };
+        loadPlayerPool();
     }, [loadPlayerPool]);
 
-    const selectPlayer = (player) => {
-        if (selectedPlayers.length >= 5) {
-            setError('Team is already full');
+    // Handle player selection
+    const selectPlayer = useCallback((player) => {
+        if (isSimulated) {
+            setError('Cannot make changes after simulation');
             return;
         }
-        if (budget < player.cost) {
-            setError('Not enough budget');
+        
+        if (selectedPlayers.length >= 5) {
+            setError('You can only select 5 players!');
             return;
         }
 
-        const newSelectedPlayers = [...selectedPlayers, player];
-        setSelectedPlayers(newSelectedPlayers);
-        setBudget(budget - player.cost);
+        if (player.cost > budget) {
+            setError(`Not enough budget! You need $${player.cost} but only have $${budget} remaining.`);
+            return;
+        }
+
+        setSelectedPlayers(prev => [...prev, player]);
+        setBudget(prev => prev - player.cost);
         updatePlayerOptions(playerPool);
         setError('');
-    };
+    }, [budget, isSimulated, selectedPlayers.length, playerPool, updatePlayerOptions]);
 
-    const removePlayer = (playerName) => {
+    // Handle player removal
+    const removePlayer = useCallback((playerName) => {
+        if (isSimulated) {
+            setError('Cannot remove players after simulation');
+            return;
+        }
+        
         const player = selectedPlayers.find(p => p.name === playerName);
         if (player) {
-            setSelectedPlayers(selectedPlayers.filter(p => p.name !== playerName));
-            setBudget(budget + player.cost);
+            setSelectedPlayers(prev => prev.filter(p => p.name !== playerName));
+            setBudget(prev => prev + player.cost);
             updatePlayerOptions(playerPool);
         }
-    };
+    }, [isSimulated, playerPool, selectedPlayers, updatePlayerOptions]);
 
-    const simulateTeam = async () => {
+    // Simulate team performance
+    const simulateTeam = useCallback(async () => {
         if (selectedPlayers.length !== 5) {
             setError('Team must have exactly 5 players');
             return;
         }
 
-        if (!playerName.trim()) {
-            setError('Please enter your name');
+        if (!nickname || nickname.trim() === '') {
+            setError('Please enter your nickname before simulating');
             return;
         }
 
         setIsLoading(true);
         try {
-            const response = await axios.post(`${API_URL}/api/simulate`, {
-                players: selectedPlayers.map(p => p.name),
-                player_name: playerName.trim()
+            const response = await axios.post('/api/simulate-team', {
+                players: selectedPlayers.map(p => ({
+                    name: p.name,
+                    cost: p.cost,
+                    stats: p.stats || {}
+                })),
+                player_name: nickname.trim()
             });
-            setRecord(response.data);
+            
+            const data = response.data;
+            if (!data || !data.wins || !data.losses) {
+                throw new Error('Invalid response from server');
+            }
+            
+            setSimulationResults(data);
+            setIsSimulated(true);
             setError('');
-        } catch (error) {
-            setError('Error simulating team: ' + (error.response?.data?.message || error.message));
+        } catch (err) {
+            console.error('Error simulating team:', err);
+            setError(`Error simulating team: ${err.message}`);
+            if (onError) onError(err);
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [selectedPlayers, nickname, onError]);
+
+    if (isLoading) {
+        return <div className="loading">Loading...</div>;
+    }
 
     return (
         <div className="team-builder">
-            {isLoading && <div className="loading">Loading...</div>}
             <div className="team-section">
                 <h2>Your Team</h2>
                 <div className="budget-display">
                     Remaining Budget: ${budget}
                 </div>
                 <div className="selected-players">
-                    {selectedPlayers.map(player => (
-                        <div key={player.name} className="player-card">
-                            <h3>{player.name}</h3>
-                            <p>Cost: ${player.cost}</p>
-                            <button onClick={() => removePlayer(player.name)}>Remove</button>
+                    {selectedPlayers.map((player, index) => (
+                        <div key={index} className="player-card">
+                            <div className="player-image">
+                                <img 
+                                    src={`https://cdn.nba.com/headshots/nba/latest/1040x760/${player.id}.png`} 
+                                    alt={player.name}
+                                    onError={(e) => {
+                                        e.target.onerror = null;
+                                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(player.name)}&background=1E88E5&color=fff&size=200&bold=true&format=svg`;
+                                    }}
+                                />
+                            </div>
+                            <div className="player-info">
+                                <h3>{player.name}</h3>
+                                <p>Cost: ${player.cost}</p>
+                                {player.stats && (
+                                    <div className="player-stats">
+                                        <p>PTS: {player.stats.pts?.toFixed(1) || '0.0'}</p>
+                                        <p>AST: {player.stats.ast?.toFixed(1) || '0.0'}</p>
+                                        <p>REB: {player.stats.reb?.toFixed(1) || '0.0'}</p>
+                                        <p>STL: {player.stats.stl?.toFixed(1) || '0.0'}</p>
+                                        <p>BLK: {player.stats.blk?.toFixed(1) || '0.0'}</p>
+                                        <p>FG%: {(player.stats.fg_pct * 100)?.toFixed(1) || '0.0'}%</p>
+                                        <p>3P%: {(player.stats.three_pct * 100)?.toFixed(1) || '0.0'}%</p>
+                                    </div>
+                                )}
+                            </div>
+                            <button 
+                                className="remove-button"
+                                onClick={() => removePlayer(player.name)}
+                                disabled={isSimulated}
+                            >
+                                Remove
+                            </button>
                         </div>
                     ))}
                 </div>
-                {record && (
+                {selectedPlayers.length === 5 && !isSimulated && (
+                    <button 
+                        className="simulate-button"
+                        onClick={simulateTeam}
+                        disabled={!nickname || nickname.trim() === ''}
+                    >
+                        Simulate Season
+                    </button>
+                )}
+                {simulationResults && (
                     <div className="record-display">
-                        <h3>Projected Record: {record.wins}-{record.losses}</h3>
-                        <div className="player-stats">
-                            {selectedPlayers.map(player => (
-                                <div key={player.name} className="player-stat">
-                                    <h4>{player.name}</h4>
-                                    <p>PPG: {record.player_stats[player.name].ppg.toFixed(1)}</p>
-                                    <p>RPG: {record.player_stats[player.name].rpg.toFixed(1)}</p>
-                                    <p>APG: {record.player_stats[player.name].apg.toFixed(1)}</p>
-                                    <p>SPG: {record.player_stats[player.name].spg.toFixed(1)}</p>
-                                    <p>BPG: {record.player_stats[player.name].bpg.toFixed(1)}</p>
-                                </div>
-                            ))}
-                        </div>
+                        <h3>Season Results</h3>
+                        <p>Record: {simulationResults.wins}-{simulationResults.losses}</p>
+                        <p>Win Probability: {(simulationResults.win_probability * 100).toFixed(1)}%</p>
+                        {simulationResults.team_stats && (
+                            <div className="team-stats">
+                                <h4>Team Statistics</h4>
+                                <p>Points per Game: {simulationResults.team_stats.PTS.toFixed(1)}</p>
+                                <p>Assists per Game: {simulationResults.team_stats.AST.toFixed(1)}</p>
+                                <p>Rebounds per Game: {simulationResults.team_stats.REB.toFixed(1)}</p>
+                                <p>Steals per Game: {simulationResults.team_stats.STL.toFixed(1)}</p>
+                                <p>Blocks per Game: {simulationResults.team_stats.BLK.toFixed(1)}</p>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
-
             <div className="player-section">
                 <h2>Available Players</h2>
                 <div className="player-options">
-                    {playerOptions.map(player => (
-                        <div key={player.name} className="player-card">
-                            <h3>{player.name}</h3>
-                            <p>Cost: ${player.cost}</p>
+                    {playerOptions.map((player, index) => (
+                        <div key={index} className="player-card">
+                            <div className="player-image">
+                                <img 
+                                    src={`https://cdn.nba.com/headshots/nba/latest/1040x760/${player.id}.png`} 
+                                    alt={player.name}
+                                    onError={(e) => {
+                                        e.target.onerror = null;
+                                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(player.name)}&background=1E88E5&color=fff&size=200&bold=true&format=svg`;
+                                    }}
+                                />
+                            </div>
+                            <div className="player-info">
+                                <h3>{player.name}</h3>
+                                <p>Cost: ${player.cost}</p>
+                                {player.stats && (
+                                    <div className="player-stats">
+                                        <p>PTS: {player.stats.pts?.toFixed(1) || '0.0'}</p>
+                                        <p>AST: {player.stats.ast?.toFixed(1) || '0.0'}</p>
+                                        <p>REB: {player.stats.reb?.toFixed(1) || '0.0'}</p>
+                                        <p>STL: {player.stats.stl?.toFixed(1) || '0.0'}</p>
+                                        <p>BLK: {player.stats.blk?.toFixed(1) || '0.0'}</p>
+                                        <p>FG%: {(player.stats.fg_pct * 100)?.toFixed(1) || '0.0'}%</p>
+                                        <p>3P%: {(player.stats.three_pct * 100)?.toFixed(1) || '0.0'}%</p>
+                                    </div>
+                                )}
+                            </div>
                             <button 
+                                className="select-button"
                                 onClick={() => selectPlayer(player)}
-                                disabled={budget < player.cost || selectedPlayers.length >= 5}
+                                disabled={budget < player.cost || selectedPlayers.length >= 5 || isSimulated}
                             >
                                 Select
                             </button>
@@ -181,28 +255,9 @@ const TeamBuilder = () => {
                     ))}
                 </div>
             </div>
-
             {error && <div className="error-message">{error}</div>}
-
-            <div className="simulation-section">
-                <input
-                    type="text"
-                    value={playerName}
-                    onChange={(e) => setPlayerName(e.target.value)}
-                    placeholder="Enter your name"
-                    className="player-name-input"
-                />
-                <button 
-                    onClick={simulateTeam}
-                    disabled={selectedPlayers.length !== 5 || !playerName}
-                    className="simulate-button"
-                >
-                    Simulate Team
-                </button>
-            </div>
         </div>
     );
 };
 
-export default TeamBuilder; 
->>>>>>> 1bf1db52befb5dcab06a291879a09904ab39c2b9
+export default TeamBuilder;
