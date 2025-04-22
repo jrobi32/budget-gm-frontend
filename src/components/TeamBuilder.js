@@ -149,18 +149,29 @@ const TeamBuilder = ({ onError, nickname }) => {
     }, [API_URL, updatePlayerOptions]);
 
     useEffect(() => {
-        const initializeApp = async () => {
+        let isMounted = true;
+
+        const initialize = async () => {
             try {
                 setIsLoading(true);
                 await loadPlayerPool();
             } catch (error) {
                 console.error('Error initializing app:', error);
-                setError('Failed to load application data. Please try again later.');
+                if (isMounted) {
+                    setError('Failed to load application data. Please try again later.');
+                }
             } finally {
-                setIsLoading(false);
+                if (isMounted) {
+                    setIsLoading(false);
+                }
             }
         };
-        initializeApp();
+
+        initialize();
+
+        return () => {
+            isMounted = false;
+        };
     }, [loadPlayerPool]);
 
     const getRandomPlayers = useCallback((category) => {
