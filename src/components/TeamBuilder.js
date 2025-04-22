@@ -110,7 +110,7 @@ const TeamBuilder = ({ onError, nickname }) => {
         });
         
         setPlayerOptions(filteredOptions);
-    }, []);
+    }, [setPlayerOptions]);
 
     const loadPlayerPool = useCallback(async () => {
         try {
@@ -146,7 +146,7 @@ const TeamBuilder = ({ onError, nickname }) => {
                 '$1': []
             });
         }
-    }, [API_URL, updatePlayerOptions]);
+    }, [API_URL, updatePlayerOptions, setPlayerPool, setError, setPlayerOptions]);
 
     useEffect(() => {
         let isMounted = true;
