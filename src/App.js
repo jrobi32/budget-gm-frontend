@@ -1,10 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 import TeamBuilder from './components/TeamBuilder';
 
 function App() {
   const [error, setError] = useState('');
   const [nickname, setNickname] = useState('');
+
+  // Clear error after 5 seconds
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(''), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
+  const handleNicknameChange = (e) => {
+    const value = e.target.value;
+    // Only allow alphanumeric characters and spaces
+    if (/^[a-zA-Z0-9\s]*$/.test(value)) {
+      setNickname(value);
+    }
+  };
 
   return (
     <div className="App">
@@ -16,15 +32,16 @@ function App() {
               type="text"
               placeholder="Enter your nickname"
               value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
+              onChange={handleNicknameChange}
               className="nickname-field"
+              maxLength={20}
             />
           </div>
         </div>
       </header>
       <main>
         {error && <div className="global-error">{error}</div>}
-        <TeamBuilder onError={setError} nickname={nickname} />
+        <TeamBuilder onError={setError} nickname={nickname.trim()} />
       </main>
     </div>
   );
