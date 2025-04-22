@@ -95,17 +95,17 @@ const TeamBuilder = ({ onError, nickname }) => {
         const selectedPlayerNames = currentSelectedPlayers.map(p => p.name);
         const filteredOptions = {};
         
-        ['$5', '$4', '$3', '$2', '$1'].forEach(category => {
+        ['5', '4', '3', '2', '1'].forEach(category => {
             if (pool[category]) {
                 const availablePlayers = pool[category].filter(player => 
                     !selectedPlayerNames.includes(player.name)
                 );
-                filteredOptions[category] = availablePlayers.map(player => ({
+                filteredOptions[`$${category}`] = availablePlayers.map(player => ({
                     ...player,
-                    cost: parseInt(category.replace('$', ''))
+                    cost: parseInt(category)
                 }));
             } else {
-                filteredOptions[category] = [];
+                filteredOptions[`$${category}`] = [];
             }
         });
         
@@ -132,8 +132,18 @@ const TeamBuilder = ({ onError, nickname }) => {
             if (!data || Object.keys(data).length === 0) {
                 throw new Error('Empty player pool received');
             }
-            setPlayerPool(data);
-            updatePlayerOptions(data, []);  // Pass empty selected players initially
+            
+            // Transform the data to match the expected format
+            const transformedData = {
+                '$5': data['5'] || [],
+                '$4': data['4'] || [],
+                '$3': data['3'] || [],
+                '$2': data['2'] || [],
+                '$1': data['1'] || []
+            };
+            
+            setPlayerPool(transformedData);
+            updatePlayerOptions(transformedData, []);  // Pass empty selected players initially
             setError('');
         } catch (error) {
             console.error('Error loading player pool:', error);
