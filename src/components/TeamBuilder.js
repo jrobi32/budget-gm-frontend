@@ -3,6 +3,9 @@ import axios from 'axios';
 import './TeamBuilder.css';
 import { playerIds } from '../playerIds';
 
+// Get API URL from environment variable or use default
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 // Function to get player image URL
 const getPlayerImageUrl = (playerName) => {
     // For fictional players, use specific images from various sources
@@ -65,9 +68,6 @@ const PlayerCard = React.memo(({ player, onSelect, isSelected, onDeselect }) => 
 });
 
 const TeamBuilder = ({ onError, nickname }) => {
-    // Get API URL from environment variable or use default
-    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-    
     const [playerPool, setPlayerPool] = useState({});
     const [selectedPlayers, setSelectedPlayers] = useState([]);
     const [playerOptions, setPlayerOptions] = useState([]);
@@ -120,7 +120,8 @@ const TeamBuilder = ({ onError, nickname }) => {
         } finally {
             setIsLoading(false);
         }
-    }, [updatePlayerOptions, API_URL]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [updatePlayerOptions]);
 
     // Initial data loading effect
     useEffect(() => {
@@ -218,7 +219,8 @@ const TeamBuilder = ({ onError, nickname }) => {
             console.error('Error simulating team:', error);
             setError(`Error simulating team: ${error.message}`);
         }
-    }, [nickname, selectedPlayers, API_URL]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [nickname, selectedPlayers]);
 
     const handleImageError = useCallback((playerName) => {
         setImageErrors(prev => ({
