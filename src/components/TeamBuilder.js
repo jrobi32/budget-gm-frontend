@@ -118,7 +118,7 @@ const TeamBuilder = ({ onError, nickname }) => {
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [updatePlayerOptions]);
 
     // Initial data loading effect
     useEffect(() => {
