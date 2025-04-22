@@ -2,12 +2,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import './TeamBuilder.css';
+import { API_URL } from '../config';
 
 const TeamBuilder = ({ onError, nickname }) => {
     const [playerPool, setPlayerPool] = useState({});
     const [selectedPlayers, setSelectedPlayers] = useState([]);
     const [playerOptions, setPlayerOptions] = useState([]);
-    const [budget, setBudget] = useState(5);
+    const [budget, setBudget] = useState(15);
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [simulationResults, setSimulationResults] = useState(null);
@@ -42,7 +43,7 @@ const TeamBuilder = ({ onError, nickname }) => {
     const loadPlayerPool = useCallback(async () => {
         setIsLoading(true);
         try {
-            const response = await axios.get('/api/player-pool');
+            const response = await axios.get(`${API_URL}/api/player-pool`);
             const newPlayerPool = response.data;
             setPlayerPool(newPlayerPool);
             updatePlayerOptions(newPlayerPool);
@@ -112,7 +113,7 @@ const TeamBuilder = ({ onError, nickname }) => {
 
         setIsLoading(true);
         try {
-            const response = await axios.post('/api/simulate-team', {
+            const response = await axios.post(`${API_URL}/api/simulate-team`, {
                 players: selectedPlayers.map(p => ({
                     name: p.name,
                     cost: p.cost,
