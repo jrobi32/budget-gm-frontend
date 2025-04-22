@@ -172,7 +172,7 @@ const TeamBuilder = ({ onError, nickname }) => {
         return () => {
             isMounted = false;
         };
-    }, [loadPlayerPool]);
+    }, [loadPlayerPool, setError, setIsLoading]);
 
     const getRandomPlayers = useCallback((category) => {
         if (!playerPool[category]) return [];
