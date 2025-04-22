@@ -45,10 +45,21 @@ const TeamBuilder = ({ onError, nickname }) => {
         try {
             const response = await axios.get(`${API_URL}/api/player-pool`);
             const newPlayerPool = response.data;
-            setPlayerPool(newPlayerPool);
-            updatePlayerOptions(newPlayerPool);
+            
+            // Convert cost keys to include $ prefix for consistency
+            const formattedPool = {
+                '$5': newPlayerPool['5'] || [],
+                '$4': newPlayerPool['4'] || [],
+                '$3': newPlayerPool['3'] || [],
+                '$2': newPlayerPool['2'] || [],
+                '$1': newPlayerPool['1'] || []
+            };
+            
+            setPlayerPool(formattedPool);
+            updatePlayerOptions(formattedPool);
             setError('');
         } catch (err) {
+            console.error('Error loading player pool:', err);
             setError('Error loading player pool: ' + (err.response?.data?.message || err.message));
             if (onError) onError(err);
         } finally {
