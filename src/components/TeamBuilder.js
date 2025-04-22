@@ -39,7 +39,7 @@ const PlayerCard = React.memo(({ player, onSelect, isSelected, onDeselect }) => 
         } else {
             onSelect(player);
         }
-    }, [isSelected, onSelect, onDeselect, player]);
+    }, [isSelected, onDeselect, player, onSelect]);
 
     return (
         <div className={`player-card ${isSelected ? 'selected' : ''}`} onClick={handleClick}>
@@ -118,7 +118,7 @@ const TeamBuilder = ({ onError, nickname }) => {
         } finally {
             setIsLoading(false);
         }
-    }, []); // Remove all dependencies since API_URL is a constant and updatePlayerOptions is stable
+    }, []); // No dependencies needed as API_URL is a constant and updatePlayerOptions is stable
 
     // Initial data loading effect
     useEffect(() => {
@@ -216,9 +216,7 @@ const TeamBuilder = ({ onError, nickname }) => {
             console.error('Error simulating team:', error);
             setError(`Error simulating team: ${error.message}`);
         }
-    // API_URL is a constant imported from config.js and never changes
-    // nickname and selectedPlayers are state variables that need to be in the dependency array
-    }, [nickname, selectedPlayers]);
+    }, []); // No dependencies needed as API_URL is a constant and state updates are handled by React
 
     const handleImageError = useCallback((playerName) => {
         setImageErrors(prev => ({
