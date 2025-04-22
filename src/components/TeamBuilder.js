@@ -42,29 +42,51 @@ const TeamBuilder = ({ onError, nickname }) => {
     // Load player pool from backend
     const loadPlayerPool = useCallback(async () => {
         setIsLoading(true);
-        try {
-            const response = await axios.get(`${API_URL}/api/player-pool`);
-            const newPlayerPool = response.data;
-            
-            // Convert cost keys to include $ prefix for consistency
-            const formattedPool = {
-                '$5': newPlayerPool['5'] || [],
-                '$4': newPlayerPool['4'] || [],
-                '$3': newPlayerPool['3'] || [],
-                '$2': newPlayerPool['2'] || [],
-                '$1': newPlayerPool['1'] || []
-            };
-            
-            setPlayerPool(formattedPool);
-            updatePlayerOptions(formattedPool);
-            setError('');
-        } catch (err) {
-            console.error('Error loading player pool:', err);
-            setError('Error loading player pool: ' + (err.response?.data?.message || err.message));
-            if (onError) onError(err);
-        } finally {
-            setIsLoading(false);
+        let retryCount = 0;
+        const maxRetries = 3;
+        
+        while (retryCount < maxRetries) {
+            try {
+                const response = await axios.get(`${API_URL}/api/player-pool`);
+                
+                // Check if response data is valid
+                if (!response.data || typeof response.data !== 'object') {
+                    throw new Error('Invalid response format from server');
+                }
+                
+                // Check if we have any players in the response
+                const hasPlayers = Object.values(response.data).some(players => Array.isArray(players) && players.length > 0);
+                if (!hasPlayers) {
+                    throw new Error('No players available in the pool');
+                }
+                
+                // Convert cost keys to include $ prefix for consistency
+                const formattedPool = {
+                    '$5': response.data['5'] || [],
+                    '$4': response.data['4'] || [],
+                    '$3': response.data['3'] || [],
+                    '$2': response.data['2'] || [],
+                    '$1': response.data['1'] || []
+                };
+                
+                setPlayerPool(formattedPool);
+                updatePlayerOptions(formattedPool);
+                setError('');
+                break; // Success, exit retry loop
+            } catch (err) {
+                console.error(`Error loading player pool (attempt ${retryCount + 1}/${maxRetries}):`, err);
+                if (retryCount === maxRetries - 1) {
+                    setError('Error loading player pool: ' + (err.response?.data?.message || err.message));
+                    if (onError) onError(err);
+                }
+                retryCount++;
+                if (retryCount < maxRetries) {
+                    // Wait before retrying (exponential backoff)
+                    await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retryCount)));
+                }
+            }
         }
+        setIsLoading(false);
     }, [updatePlayerOptions, onError]);
 
     // Initial load
@@ -151,7 +173,43 @@ const TeamBuilder = ({ onError, nickname }) => {
     }, [selectedPlayers, nickname, onError]);
 
     if (isLoading) {
-        return <div className="loading">Loading...</div>;
+        return (
+            <div className="loading-container">
+                <div className="loading">Loading player pool...</div>
+                {error && <div className="error-message">{error}</div>}
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="error-container">
+                <div className="error-message">{error}</div>
+                <button 
+                    className="retry-button"
+                    onClick={() => {
+                        setError('');
+                        loadPlayerPool();
+                    }}
+                >
+                    Retry
+                </button>
+            </div>
+        );
+    }
+
+    if (!playerPool || Object.keys(playerPool).length === 0) {
+        return (
+            <div className="error-container">
+                <div className="error-message">No players available. Please try again later.</div>
+                <button 
+                    className="retry-button"
+                    onClick={loadPlayerPool}
+                >
+                    Retry
+                </button>
+            </div>
+        );
     }
 
     return (
@@ -267,7 +325,6 @@ const TeamBuilder = ({ onError, nickname }) => {
                     ))}
                 </div>
             </div>
-            {error && <div className="error-message">{error}</div>}
         </div>
     );
 };
