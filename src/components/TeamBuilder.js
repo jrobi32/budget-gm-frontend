@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import axios from 'axios';
 import './TeamBuilder.css';
 import { playerIds } from '../playerIds';
 
 // Get API URL from environment variable or use default
-const API_URL = process.env.REACT_APP_API_URL || 'https://budget-gm-backend.onrender.com';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 // Function to get player image URL
 const getPlayerImageUrl = (playerName) => {
@@ -67,121 +68,76 @@ const PlayerCard = React.memo(({ player, onSelect, isSelected, onDeselect }) => 
 });
 
 const TeamBuilder = ({ onError, nickname }) => {
-    const [playerPool, setPlayerPool] = useState({
-        '$5': [],
-        '$4': [],
-        '$3': [],
-        '$2': [],
-        '$1': []
-    });
+    const [playerPool, setPlayerPool] = useState({});
     const [selectedPlayers, setSelectedPlayers] = useState([]);
-    const [budget, setBudget] = useState(15);
+    const [playerOptions, setPlayerOptions] = useState([]);
+    const [budget, setBudget] = useState(10);
+    const [record, setRecord] = useState(null);
+    const [playerName, setPlayerName] = useState('');
     const [error, setError] = useState('');
-    const [hasSubmitted, setHasSubmitted] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const [simulationResults, setSimulationResults] = useState(null);
     const [rankings, setRankings] = useState(null);
-    const [playerOptions, setPlayerOptions] = useState({
-        '$5': [],
-        '$4': [],
-        '$3': [],
-        '$2': [],
-        '$1': []
-    });
     const [isSimulated, setIsSimulated] = useState(false);
     const [imageErrors, setImageErrors] = useState({});
-    const [isLoading, setIsLoading] = useState(true);
 
-    const updatePlayerOptions = useCallback((pool, currentSelectedPlayers) => {
-        const selectedPlayerNames = currentSelectedPlayers.map(p => p.name);
-        const filteredOptions = {};
-        
-        ['5', '4', '3', '2', '1'].forEach(category => {
+    // Memoized function to filter players based on current state
+    const filterPlayers = useCallback((pool, currentSelectedPlayers) => {
+        const options = [];
+        ['$3', '$2', '$1', '$0'].forEach(category => {
             if (pool[category]) {
-                const availablePlayers = pool[category].filter(player => 
-                    !selectedPlayerNames.includes(player.name)
+                const players = pool[category].filter(player => 
+                    !currentSelectedPlayers.some(p => p.name === player.name)
                 );
-                filteredOptions[`$${category}`] = availablePlayers.map(player => ({
-                    ...player,
-                    cost: parseInt(category)
-                }));
-            } else {
-                filteredOptions[`$${category}`] = [];
+                if (players.length > 0) {
+                    options.push(...players.map(player => ({
+                        ...player,
+                        cost: parseInt(category.replace('$', ''))
+                    })));
+                }
             }
         });
-        
+        return options;
+    }, []); // No dependencies needed as it's a pure function
+
+    // Memoized function to update player options
+    const updatePlayerOptions = useCallback((pool) => {
+        const filteredOptions = filterPlayers(pool, selectedPlayers);
         setPlayerOptions(filteredOptions);
-    }, []);
+    }, [filterPlayers, selectedPlayers]);
 
+    // Memoized function to load player pool
     const loadPlayerPool = useCallback(async () => {
+        setIsLoading(true);
         try {
-            const response = await fetch(`${API_URL}/api/player-pool`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                mode: 'cors',
-                credentials: 'omit'
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            if (!data || Object.keys(data).length === 0) {
-                throw new Error('Empty player pool received');
-            }
-            
-            // Transform the data to match the expected format
-            const transformedData = {
-                '$5': data['5'] || [],
-                '$4': data['4'] || [],
-                '$3': data['3'] || [],
-                '$2': data['2'] || [],
-                '$1': data['1'] || []
-            };
-            
-            setPlayerPool(transformedData);
-            updatePlayerOptions(transformedData, []);  // Pass empty selected players initially
+            const response = await axios.get(`${API_URL}/api/player-pool`);
+            const newPlayerPool = response.data;
+            setPlayerPool(newPlayerPool);
+            updatePlayerOptions(newPlayerPool);
             setError('');
         } catch (error) {
-            console.error('Error loading player pool:', error);
-            setError(`Error loading player pool: ${error.message}`);
-            setPlayerOptions({
-                '$5': [],
-                '$4': [],
-                '$3': [],
-                '$2': [],
-                '$1': []
-            });
-        }
-    }, [API_URL, updatePlayerOptions, setPlayerPool, setError, setPlayerOptions]);
-
-    // Define initialize function outside useEffect to avoid dependency issues
-    const initialize = useCallback(async () => {
-        let isMounted = true;
-        try {
-            setIsLoading(true);
-            await loadPlayerPool();
-        } catch (error) {
-            console.error('Error initializing app:', error);
-            if (isMounted) {
-                setError('Failed to load application data. Please try again later.');
-            }
+            setError('Error loading player pool: ' + (error.response?.data?.message || error.message));
         } finally {
-            if (isMounted) {
-                setIsLoading(false);
-            }
+            setIsLoading(false);
         }
+    }, [updatePlayerOptions]); // Removed API_URL as it's a constant
+
+    // Initial data loading effect
+    useEffect(() => {
+        let isMounted = true;
+        
+        const fetchData = async () => {
+            if (isMounted) {
+                await loadPlayerPool();
+            }
+        };
+
+        fetchData();
+
         return () => {
             isMounted = false;
         };
-    }, [loadPlayerPool, setIsLoading, setError]);
-
-    useEffect(() => {
-        initialize();
-    }, [initialize]); // Only depend on initialize function
+    }, [loadPlayerPool]);
 
     const getRandomPlayers = useCallback((category) => {
         if (!playerPool[category]) return [];
@@ -191,8 +147,8 @@ const TeamBuilder = ({ onError, nickname }) => {
     }, [playerPool]);
 
     const selectPlayer = useCallback((player, category) => {
-        if (hasSubmitted) {
-            setError('You have already submitted your team. Cannot make changes.');
+        if (isSimulated) {
+            setError('Cannot make changes after simulation');
             return;
         }
         
@@ -212,7 +168,7 @@ const TeamBuilder = ({ onError, nickname }) => {
         setSelectedPlayers(prev => [...prev, player]);
         setBudget(prev => prev - cost);
         setError('');
-    }, [budget, hasSubmitted, selectedPlayers.length]);
+    }, [budget, isSimulated, selectedPlayers.length]);
 
     const removePlayer = useCallback((playerName) => {
         if (isSimulated) {
@@ -225,7 +181,7 @@ const TeamBuilder = ({ onError, nickname }) => {
             const newSelectedPlayers = selectedPlayers.filter(p => p.name !== playerName);
             setSelectedPlayers(newSelectedPlayers);
             setBudget(prev => prev + parseInt(player.cost.replace('$', '')));
-            updatePlayerOptions(playerPool, newSelectedPlayers);
+            updatePlayerOptions(playerPool);
         }
     }, [isSimulated, playerPool, selectedPlayers, updatePlayerOptions]);
 
@@ -241,29 +197,16 @@ const TeamBuilder = ({ onError, nickname }) => {
         }
 
         try {
-            const response = await fetch(`${API_URL}/api/simulate-team`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    players: selectedPlayers.map(p => ({
-                        name: p.name,
-                        cost: p.cost,
-                        stats: p.stats || {}
-                    })),
-                    player_name: nickname.trim()
-                }),
-                mode: 'cors',
-                credentials: 'omit'
+            const response = await axios.post(`${API_URL}/api/simulate-team`, {
+                players: selectedPlayers.map(p => ({
+                    name: p.name,
+                    cost: p.cost,
+                    stats: p.stats || {}
+                })),
+                player_name: nickname.trim()
             });
             
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
+            const data = response.data;
             if (!data || !data.wins || !data.losses) {
                 throw new Error('Invalid response from server');
             }
@@ -297,21 +240,14 @@ const TeamBuilder = ({ onError, nickname }) => {
     ), [selectedPlayers, selectPlayer, removePlayer]);
 
     const playerOptionsList = useMemo(() => (
-        Object.entries(playerOptions).map(([category, players]) => (
-            <div key={category} className="player-category">
-                <h3>{category} Players</h3>
-                <div className="player-options">
-                    {players.map((player, index) => (
-                        <PlayerCard 
-                            key={index}
-                            player={player}
-                            onSelect={selectPlayer}
-                            onDeselect={removePlayer}
-                            isSelected={selectedPlayers.includes(player)}
-                        />
-                    ))}
-                </div>
-            </div>
+        playerOptions.map((player, index) => (
+            <PlayerCard 
+                key={index}
+                player={player}
+                onSelect={selectPlayer}
+                onDeselect={removePlayer}
+                isSelected={selectedPlayers.includes(player)}
+            />
         ))
     ), [playerOptions, selectPlayer, removePlayer, selectedPlayers]);
 
