@@ -120,7 +120,7 @@ const TeamBuilder = ({ onError, nickname }) => {
         } finally {
             setIsLoading(false);
         }
-    }, [updatePlayerOptions]); // Removed API_URL as it's a constant
+    }, [updatePlayerOptions]);
 
     // Initial data loading effect
     useEffect(() => {
