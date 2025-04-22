@@ -118,6 +118,8 @@ const TeamBuilder = ({ onError, nickname }) => {
         } finally {
             setIsLoading(false);
         }
+    // API_URL is a constant imported from config.js and never changes
+    // updatePlayerOptions is a function that needs to be in the dependency array
     }, [updatePlayerOptions]);
 
     // Initial data loading effect
@@ -216,7 +218,9 @@ const TeamBuilder = ({ onError, nickname }) => {
             console.error('Error simulating team:', error);
             setError(`Error simulating team: ${error.message}`);
         }
-    }, []);
+    // API_URL is a constant imported from config.js and never changes
+    // nickname and selectedPlayers are state variables that need to be in the dependency array
+    }, [nickname, selectedPlayers]);
 
     const handleImageError = useCallback((playerName) => {
         setImageErrors(prev => ({
