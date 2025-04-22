@@ -135,7 +135,7 @@ const TeamBuilder = ({ onError, nickname }) => {
                 '$1': []
             });
         }
-    }, [API_URL]);
+    }, [API_URL, updatePlayerOptions]);
 
     useEffect(() => {
         const initializeApp = async () => {
@@ -152,7 +152,7 @@ const TeamBuilder = ({ onError, nickname }) => {
         initializeApp();
     }, [loadPlayerPool]);
 
-    const updatePlayerOptions = (pool, currentSelectedPlayers) => {
+    const updatePlayerOptions = useCallback((pool, currentSelectedPlayers) => {
         const selectedPlayerNames = currentSelectedPlayers.map(p => p.name);
         const filteredOptions = {};
         
@@ -171,7 +171,7 @@ const TeamBuilder = ({ onError, nickname }) => {
         });
         
         setPlayerOptions(filteredOptions);
-    };
+    }, []);
 
     const getRandomPlayers = (category) => {
         if (!playerPool[category]) return [];
