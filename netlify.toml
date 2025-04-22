@@ -1,5 +1,5 @@
 [build]
-  command = "npm run build && cd api && npm install && npm run build"
+  command = "npm run build"
   publish = "build"
   functions = "api/dist"
 
@@ -9,6 +9,7 @@
   NPM_VERSION = "9"
   CI = "false"
   ESLINT_NO_DEV_ERRORS = "true"
+  DISABLE_ESLINT_PLUGIN = "true"
 
 [[redirects]]
   from = "/api/*"
