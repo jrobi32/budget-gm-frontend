@@ -1,20 +1,13 @@
 [build]
-  command = "npm install && npm run build && cd api && npm install && npm run build"
+  command = "npm install && npm run build"
   publish = "build"
-  functions = "api/dist"
 
 [build.environment]
-  REACT_APP_API_URL = "https://budget-gm-backend.onrender.com"
   NODE_VERSION = "18.17.0"
   NPM_VERSION = "9"
   CI = "false"
   ESLINT_NO_DEV_ERRORS = "true"
   DISABLE_ESLINT_PLUGIN = "true"
-
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/api/:splat"
-  status = 200
 
 [[redirects]]
   from = "/*"
